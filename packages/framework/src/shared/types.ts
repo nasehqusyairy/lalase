@@ -1,0 +1,9 @@
+import { TimeStampColumns } from "oerem"
+
+export type TUser = {
+    id: number;
+    name: string;
+    email: string;
+    password: string;
+
+} & TimeStampColumns 

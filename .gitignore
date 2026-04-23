@@ -1,0 +1,40 @@
+# --- Dependency & Runtime ---
+node_modules/
+.pnpm-debug.log*
+pnpm-debug.log*
+
+# --- Build Outputs ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- OS & IDE Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.sublime-project
+*.sublime-workspace
+
+# --- Environment & Secrets ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Testing ---
+coverage/
+.nyc_output/
+
+# --- Framework Specifics (Lalase) ---
+.lalase/
+temp/
+logs/
+*.log
+
+# --- Local Development ---
+# Mengabaikan file sqlite lokal jika kamu memakainya di Oerem untuk testing
+*.sqlite
+*.sqlite3

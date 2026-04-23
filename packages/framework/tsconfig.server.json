@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "esnext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "composite": true,
+        "paths": {
+            "@server/*": [
+                "./src/server/*"
+            ],
+            "@shared/*": [
+                "./src/shared/*"
+            ]
+        }
+    },
+    "include": [
+        "./src/server/**/*",
+        "./src/shared/**/*",
+        "./src/server.ts"
+    ]
+}

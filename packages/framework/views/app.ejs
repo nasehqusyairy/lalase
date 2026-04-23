@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>
+        <%= title %>
+    </title>
+    <%- viteHead %>
+</head>
+
+<body>
+    <div id="root" data-page='<%- JSON.stringify({ component, props }) %>'><%- appHtml %></div>
+
+    <script type="module" src="/src/client/entry-client.tsx"></script>
+</body>
+
+</html>
