@@ -1,4 +1,4 @@
-import { TimeStampColumns } from "oerem"
+import type { TimeStampColumns } from "@lalase/oerem";
 
 export type TUser = {
     id: number;

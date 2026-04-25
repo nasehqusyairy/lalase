@@ -1,4 +1,5 @@
-import { createPool } from 'oerem'
+import { createPool } from '@lalase/oerem';
+import type { Knex } from 'knex';
 
 export const db = createPool({
     client: process.env.DB_CONNECTION || 'mysql2',
@@ -9,4 +10,4 @@ export const db = createPool({
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'lalase',
     }
-});
+} as Knex.Config);

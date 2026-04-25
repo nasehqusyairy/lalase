@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-    BelongsToManyColumn,
     createPool,
-    InferModel,
-    Model,
-    SoftDeleteColumn,
-    TimeStampColumns,
-    // ModelInstance,
+    type BelongsToManyColumn,
+    type InferModel,
+    type Model,
+    type SoftDeleteColumn,
+    type TimeStampColumns,
 } from '../src/index';
 import { belongsTo, belongsToMany, hasMany } from '../src/helper';
-import { Knex } from 'knex';
+import type { Knex } from 'knex';
 
 describe('Oerem ORM Unit Test', () => {
     // 1. Setup koneksi database (In-Memory)

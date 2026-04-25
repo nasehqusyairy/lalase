@@ -1,5 +1,5 @@
-import { Knex } from "knex";
-import { SelectBuilder } from "./select-builder";
+import type { Knex } from "knex";
+import type { SelectBuilder } from "./select-builder";
 
 // 1. State untuk Soft Delete (Internal Builder)
 export type SoftDeleteMode = 'active' | 'with' | 'only';

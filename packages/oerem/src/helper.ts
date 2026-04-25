@@ -1,4 +1,4 @@
-import { BelongsTo, BelongsToMany, HasMany, HasOne, ModelOptions, Model, RelationConfig } from "./types";
+import type { BelongsTo, BelongsToMany, HasMany, HasOne, ModelOptions, Model } from "./types";
 
 export function applySecurity<T extends Record<string, unknown>>(
     data: Partial<T>,

@@ -1,5 +1,6 @@
 {
   "name": "@lalase/oerem",
+  "type": "module",
   "version": "0.1.0",
   "homepage": "https://nasyikhqusyairy.vercel.app/",
   "repository": {

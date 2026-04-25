@@ -1,4 +1,4 @@
-import { Controller } from "../types"
+import type { Controller } from "@server/types"
 
 export const AboutController = {
     salam: async ({ req, res }) => {

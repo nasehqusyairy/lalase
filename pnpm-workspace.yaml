@@ -1,2 +1,9 @@
 packages:
   - 'packages/*'
+allowBuilds:
+  '@swc/core': true
+  better-sqlite3: true
+  esbuild: true
+  libpq: true
+  oracledb: true
+  sqlite3: true

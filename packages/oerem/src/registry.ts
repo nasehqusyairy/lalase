@@ -1,4 +1,4 @@
-import { Model } from "./types";
+import type { Model } from "./types";
 
 const models = new Map<string, Model<Record<string, unknown>, Record<string, unknown>>>();
 

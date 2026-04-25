@@ -1,9 +1,9 @@
 export * from './types';
 
 import { AsyncLocalStorage } from 'async_hooks';
-import knex, { Knex } from "knex";
+import knex, { type Knex } from "knex";
 import { executeGet, wrapOutput } from "./executor";
-import {
+import type {
     ModelOptions,
     Builder,
     Model,
@@ -13,7 +13,7 @@ import {
 } from "./types";
 import { applySecurity, controlOutput } from "./helper";
 import { ModelRegistry } from './registry';
-import { SelectBuilder } from './select-builder';
+import type { SelectBuilder } from './select-builder';
 
 export { hasMany, hasOne, belongsTo, belongsToMany } from './helper';
 

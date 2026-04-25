@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "verbatimModuleSyntax": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "target": "esnext",

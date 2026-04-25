@@ -1,9 +1,7 @@
-import { Knex } from "knex";
-import {
+import type { Knex } from "knex";
+import type {
     ModelOptions,
-    // QueryCallback,
     SoftDeleteMode,
-    WithCallback,
     WithInput,
     RelationConfig,
     Wrapper
