@@ -1,4 +1,4 @@
-export * from './types';
+export type * from './types';
 
 import { AsyncLocalStorage } from 'async_hooks';
 import knex, { type Knex } from "knex";

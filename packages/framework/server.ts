@@ -38,22 +38,6 @@ async function startServer() {
     }));
 
     let vite: ViteDevServer | undefined;
-    if (!PRODUCTION) {
-        // DEVELOPMENT: Vite Middleware
-        vite = await createViteServer({
-            server: {
-                middlewareMode: true,
-                hmr: { port: 24678 }
-            },
-            appType: 'custom'
-        });
-
-        app.use(vite.middlewares);
-
-    } else {
-        // PRODUCTION: static client build
-        app.use(express.static(path.join(__dirname, 'client')));
-    }
 
     // View engine
     app.set('view engine', 'ejs');
@@ -66,6 +50,8 @@ async function startServer() {
     // Middleware: renderProps
     app.use((req: Request, res: Response, next: NextFunction) => {
         res.renderProps = async (component: string, props: any, title = APP_NAME) => {
+            // console.log('renderProps executed');
+
             try {
                 if (req.headers['x-custom-navigation']) {
                     return res.json({ component, props });
@@ -89,11 +75,12 @@ async function startServer() {
                         viteHead,
                     };
                 } else {
+
                     // =========================
                     // PROD (built server bundle)
                     // =========================
                     const entryPath = pathToFileURL(
-                        runtimePath('ssr/entry-server.js')
+                        runtimePath('dist/ssr/entry-server.js')
                     ).href;
 
                     const { render } = await import(entryPath);
@@ -101,7 +88,7 @@ async function startServer() {
                     const { html } = await render({ component, props });
 
                     // 1. Baca file index.html hasil build
-                    const template = readFileSync(runtimePath('client/index.html'), 'utf-8');
+                    const template = readFileSync(runtimePath('dist/client/index.html'), 'utf-8');
 
                     // 2. Ambil Asset Links (Script & CSS) dari template
                     // Kita bisa gunakan regex sederhana atau membagi string-nya
@@ -211,6 +198,26 @@ async function startServer() {
 
     // Routes
     app.use(web);
+
+    if (!PRODUCTION) {
+        // DEVELOPMENT: Vite Middleware
+        vite = await createViteServer({
+            server: {
+                middlewareMode: true,
+                hmr: { port: 24678 }
+            },
+            appType: 'custom'
+        });
+
+        app.use(vite.middlewares);
+
+    } else {
+        // PRODUCTION: static client build
+        const staticPath = path.join(__dirname, 'client');
+        // console.log({ staticPath });
+
+        app.use(express.static(staticPath));
+    }
 
     // --- ERROR HANDLING ---
 

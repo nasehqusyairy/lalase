@@ -12,7 +12,10 @@
 <body>
     <div id="root" data-page='<%- JSON.stringify({ component, props }) %>'><%- appHtml %></div>
 
-    <script type="module" src="/src/client/entry-client.tsx"></script>
+    <% if (process.env.APP_ENV==='production' ) { %>
+        <% } else { %>
+            <script type="module" src="/src/client/entry-client.tsx"></script>
+            <% } %>
 </body>
 
 </html>

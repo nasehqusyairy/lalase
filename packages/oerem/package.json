@@ -27,7 +27,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run test && npm run build",
@@ -42,22 +42,23 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "knex": "^3.2.9",
     "sqlite3": "^5.1.7",
     "ts-morph": "^25.0.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.0.0",
-    "vitest": "^3.0.0",
-    "knex": "^3.2.9"
+    "vitest": "^3.0.0"
   },
   "peerDependencies": {
+    "better-sqlite3": ">=9.0.0",
     "knex": "^3.2.9",
+    "mysql": "^2.18.0",
+    "mysql2": "^3.0.0",
+    "oracledb": ">=6.0.0",
     "pg": "^8.0.0",
     "pg-native": ">=3.0.0",
     "sqlite3": "^5.0.0 || ^6.0.0",
-    "mysql": "^2.18.0",
-    "mysql2": "^3.0.0",
-    "tedious": "^16.0.0 || ^17.0.0 || ^18.0.0",
-    "oracledb": ">=6.0.0",
-    "better-sqlite3": ">=9.0.0"
+    "tedious": "^16.0.0 || ^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
     "pg": {

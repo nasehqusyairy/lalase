@@ -1,6 +1,6 @@
 import { rule } from "@server/core/validation";
 import { User } from "@server/models/model";
-import { Controller } from "@server/types";
+import type { Controller } from "@server/types";
 
 export const BooksController = {
     index: async ({ res }) => {

@@ -1,6 +1,6 @@
-import { Router, RequestHandler } from 'express';
+import { Router, type RequestHandler } from 'express';
 import { handler } from './handler';
-import { ControllerAction } from '../types';
+import type { ControllerAction } from '../types';
 
 type Middleware = RequestHandler | string;
 
@@ -99,7 +99,7 @@ class RouteBuilder {
     /* =====================
      * Export
      * ===================== */
-    getRouter() {
+    getRouter(): Router {
         return this.router;
     }
 }
