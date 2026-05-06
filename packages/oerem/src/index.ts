@@ -2,7 +2,8 @@ export type * from './types';
 
 import { AsyncLocalStorage } from 'async_hooks';
 import knex, { type Knex } from "knex";
-import { executeGet, wrapOutput } from "./executor";
+import { executeGet } from "./executor";
+import { wrapOutput } from "./wrap-output";
 import type {
     ModelOptions,
     Builder,
