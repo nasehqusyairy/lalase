@@ -67,4 +67,8 @@ export function createPool(config: Knex.Config) {
     };
 }
 
+export function getSchemaBuilder(pool: ReturnType<typeof createPool>) {
+    return pool.getConnection().schema;
+}
+
 export type PoolInstance = ReturnType<typeof createPool>;

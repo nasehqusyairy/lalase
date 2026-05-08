@@ -1,12 +1,13 @@
 import {
     createPool,
+    getSchemaBuilder,
     type BelongsToManyColumn,
     type Model,
     type SoftDeleteColumn,
     type TimeStampColumns,
 } from '../../src/index';
 import { belongsTo, belongsToMany, hasMany } from '../../src/helper';
-import type { Knex } from 'knex';
+import knex, { type Knex } from 'knex';
 
 // ─── Domain Types ─────────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export async function createTestDb() {
 
     // ── Schema Setup ────────────────────────────────────────────────────────
 
-    await db.getConnection().schema.createTable('users', (table) => {
+    await getSchemaBuilder(db).createTable('users', (table) => {
         table.increments('id').primary();
         table.string('username');
         table.string('email');
@@ -114,18 +115,18 @@ export async function createTestDb() {
         table.datetime('deleted_at').nullable();
     });
 
-    await db.getConnection().schema.createTable('roles', (table) => {
+    await getSchemaBuilder(db).createTable('roles', (table) => {
         table.increments('id');
         table.string('name');
         table.timestamps(true, true);
     });
 
-    await db.getConnection().schema.createTable('role_user', (table) => {
+    await getSchemaBuilder(db).createTable('role_user', (table) => {
         table.integer('user_id');
         table.integer('role_id');
     });
 
-    await db.getConnection().schema.createTable('posts', (table) => {
+    await getSchemaBuilder(db).createTable('posts', (table) => {
         table.increments('id');
         table.integer('user_id').unsigned();
         table.string('title');
@@ -133,7 +134,7 @@ export async function createTestDb() {
         table.timestamps(true, true);
     });
 
-    await db.getConnection().schema.createTable('comments', (table) => {
+    await getSchemaBuilder(db).createTable('comments', (table) => {
         table.increments('id');
         table.integer('post_id').unsigned();
         table.integer('user_id').unsigned();

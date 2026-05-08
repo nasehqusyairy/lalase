@@ -2,12 +2,23 @@
   "name": "@lalase/cli",
   "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/cli.ts",
+  "type": "module",
+  "bin": {
+    "lalase": "src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/cli.ts"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "cli": "node src/cli.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.33.1"
+  "packageManager": "pnpm@10.33.1",
+  "devDependencies": {
+    "memfs": "^4.0.0"
+  }
 }
