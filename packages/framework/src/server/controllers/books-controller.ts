@@ -1,11 +1,11 @@
 import { rule } from "@server/core/validation";
-import { User } from "@server/models/model";
+import userModel from "@server/models/user-model";
 import type { Controller } from "@server/types";
 
 export default {
     async index({ res }) {
-        const users = await User.all()
-        res.renderProps('books/index', { users })
+        const users = await userModel.all()
+        res.view('books/index', { users })
     },
 
     async create({ req, res }) {

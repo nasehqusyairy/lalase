@@ -5,7 +5,7 @@ import { ZodType } from 'zod';
 declare global {
     namespace Express {
         interface Response {
-            renderProps: (
+            view: (
                 component: string,
                 props?: Record<string, any>,
                 title?: string

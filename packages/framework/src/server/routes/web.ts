@@ -4,7 +4,7 @@ import aboutController from '@server/controllers/about-controller';
 import booksController from '@server/controllers/books-controller';
 
 Route.get('/', async ({ res }) => {
-    res.renderProps('home');
+    res.view('home');
 }).name('home.index');
 
 Route.prefix('/salam').group(() => {

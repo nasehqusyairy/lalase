@@ -5,6 +5,6 @@ export default {
         const nama = req.param('nama', '')
         const umur = req.param('umur', 0)
 
-        res.renderProps('salam', { nama, umur })
+        res.view('salam', { nama, umur })
     }
 } satisfies Controller

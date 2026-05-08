@@ -47,10 +47,10 @@ async function startServer() {
     );
 
 
-    // Middleware: renderProps
+    // Middleware: view
     app.use((req: Request, res: Response, next: NextFunction) => {
-        res.renderProps = async (component: string, props: any, title = APP_NAME) => {
-            // console.log('renderProps executed');
+        res.view = async (component: string, props: any, title = APP_NAME) => {
+            // console.log('view executed');
 
             try {
                 if (req.headers['x-custom-navigation']) {
