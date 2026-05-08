@@ -8,6 +8,9 @@
         "moduleResolution": "bundler",
         "strict": true,
         "composite": true,
+        "types": [
+            "vite/client"
+        ],
         "paths": {
             "@shared/*": [
                 "./src/shared/*"

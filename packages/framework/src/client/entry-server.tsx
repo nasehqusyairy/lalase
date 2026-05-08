@@ -1,4 +1,3 @@
-// src/entry-server.tsx
 import { renderToString } from 'react-dom/server';
 import App from './app';
 

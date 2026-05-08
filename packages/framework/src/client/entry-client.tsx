@@ -1,4 +1,3 @@
-// src/entry-client.tsx
 import './main.css';
 import { hydrateRoot } from 'react-dom/client';
 import { useState, useEffect } from 'react';
