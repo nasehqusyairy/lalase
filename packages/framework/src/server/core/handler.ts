@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { ControllerAction } from '../types';
+import type { ControllerAction } from '../types';
 
 export function handler(action: ControllerAction) {
     return (req: Request, res: Response, next: NextFunction) => {
