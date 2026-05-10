@@ -1,10 +1,10 @@
-import { type Request, type Response, type NextFunction, type RequestHandler } from 'express';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
 import { pathToFileURL } from 'url';
 import { PRODUCTION, APP_NAME, runtimePath } from '@server/core/config';
 import { setVite } from './serve.js';
+import type { Middleware } from '@server/types';
 
 let vite: ViteDevServer | undefined;
 
@@ -12,7 +12,7 @@ let vite: ViteDevServer | undefined;
  * View middleware - handles rendering React components to HTML
  * Supports both DEV (Vite SSR) and PROD (built bundle) modes
  */
-export const viewMiddleware: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const viewMiddleware: Middleware = async ({ req, res, next }) => {
     // Initialize Vite in development mode
     if (!PRODUCTION && !vite) {
         vite = await createViteServer({

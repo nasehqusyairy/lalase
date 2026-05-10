@@ -1,4 +1,4 @@
-import type { RequestHandler, ErrorRequestHandler } from 'express';
+import type { Middleware } from '@server/types';
 
 // Core middlewares
 import { sessionMiddleware } from './core/session';
@@ -17,29 +17,18 @@ import { serveMiddleware } from './core/serve';
 // ========================
 
 /**
- * Type for any Express middleware (regular or error handler)
- */
-type ExpressMiddleware = RequestHandler | ErrorRequestHandler;
-
-/**
  * Middleware registry - users can add their custom middlewares here
  * Users simply add their middleware handlers to this array
  */
 
-const example: RequestHandler = (req, res, next) => {
-    // Example middleware logic
-    console.log('Example middleware executed');
-    next();
-}
-
-export const globalMiddlewares: ExpressMiddleware[] = [
+export const globalMiddlewares: Middleware[] = [
     // Your global middlewares can be added here
 ];
-export const apilMiddlewares: ExpressMiddleware[] = [
+export const apiMiddlewares: Middleware[] = [
     // Your API middlewares can be added here
 ];
 
-export const webMiddlewares: ExpressMiddleware[] = [
+export const webMiddlewares: Middleware[] = [
     // Core middlewares
     sessionMiddleware,
     ...bodyParserMiddleware,
@@ -54,10 +43,10 @@ export const webMiddlewares: ExpressMiddleware[] = [
     //
 ];
 
-export const errorHandlers: ErrorRequestHandler[] = [
+export const errorHandlers: Middleware[] = [
     errorMiddleware,
 ];
 
-export const notFoundHandlers: RequestHandler[] = [
+export const notFoundHandlers: Middleware[] = [
     notFoundMiddleware
 ];

@@ -1,6 +1,7 @@
-import express, { type RequestHandler } from 'express';
+import express from 'express';
 import { PRODUCTION, runtimePath } from '@server/core/config';
 import type { ViteDevServer } from 'vite';
+import type { Middleware } from '@server/types';
 
 let viteInstance: ViteDevServer | undefined;
 
@@ -22,7 +23,7 @@ export function getViteInstance(): ViteDevServer | undefined {
  * Serve middleware - handles Vite dev server or static files
  * Based on environment (DEV vs PROD)
  */
-export const serveMiddleware: RequestHandler = async (req, res, next) => {
+export const serveMiddleware: Middleware = async ({ req, res, next }) => {
     if (!PRODUCTION) {
         // DEVELOPMENT: Use Vite dev middlewares
         const vite = getViteInstance();

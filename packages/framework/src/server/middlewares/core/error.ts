@@ -1,18 +1,23 @@
-import { type Request, type Response, type NextFunction, type ErrorRequestHandler } from 'express';
 import { readFileSync } from 'fs';
 import { HttpError, ValidationError } from '@server/core/error';
 import { PRODUCTION } from '@server/core/config';
+import type { Middleware } from '@server/types';
 
 /**
  * Error handling middleware - handles all server errors
  * Returns appropriate response based on error type
  */
-export const errorMiddleware: ErrorRequestHandler = (
-    err: Error,
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+export const errorMiddleware: Middleware = ({
+    err,
+    req,
+    res,
+    next,
+}) => {
+    // Skip if no error
+    if (!err) {
+        return next();
+    }
+
     // Skip if headers already sent
     if (res.headersSent) {
         return next(err);

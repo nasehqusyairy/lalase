@@ -3,7 +3,7 @@ import express, { type Application, type Router } from 'express';
 import { PORT, runtimePath, APP_NAME } from './config';
 
 // Middleware registry
-import { apilMiddlewares, errorHandlers, globalMiddlewares, notFoundHandlers, webMiddlewares } from '@server/middlewares/autoloads';
+import { errorHandlers, globalMiddlewares, notFoundHandlers, webMiddlewares, apiMiddlewares } from '@server/middlewares/autoloads';
 
 // Routes
 import { web } from '@server/routes/web';
@@ -32,7 +32,7 @@ export function createApp(): Application {
     // =========================
     // Routes
     // =========================
-    app.use('/api', ...apilMiddlewares, api);
+    app.use('/api', ...apiMiddlewares, api);
     app.use(webMiddlewares, web);
 
     for (const errorHandler of errorHandlers) {

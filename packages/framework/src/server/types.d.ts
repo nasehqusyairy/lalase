@@ -1,6 +1,16 @@
-import { type Request, type Response } from 'express';
+import { type Request, type Response, type NextFunction } from 'express';
 import 'express-session';
 import { ZodType } from 'zod';
+
+/**
+ * Custom Middleware type with object destructuring parameter
+ */
+export type Middleware = (ctx: {
+    err?: Error;
+    req: Request;
+    res: Response;
+    next: NextFunction;
+}) => void;
 
 declare global {
     namespace Express {

@@ -1,10 +1,9 @@
-import { type Request, type Response, type NextFunction, type RequestHandler } from 'express';
 import { deepTrim } from '@server/core/request';
 import { castValue } from '@shared/helpers';
 import { AuthorizationError, ValidationError } from '@server/core/error';
-import type { RequestDefinition } from '@server/types';
+import type { Middleware, RequestDefinition } from '@server/types';
 
-export const requestMiddleware: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const requestMiddleware: Middleware = ({ req, res, next }) => {
     req.all = () => {
         return deepTrim({
             ...req.query,

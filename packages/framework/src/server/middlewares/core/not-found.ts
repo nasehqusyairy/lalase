@@ -1,9 +1,9 @@
-import type { Request, Response, RequestHandler } from 'express';
+import type { Middleware } from '@server/types';
 
 /**
  * Not Found (404) middleware - handles unmatched routes
  */
-export const notFoundMiddleware: RequestHandler = (req: Request, res: Response) => {
+export const notFoundMiddleware: Middleware = ({ req, res }) => {
     res.status(404).render('error', {
         message: 'Halaman tidak ditemukan',
     });

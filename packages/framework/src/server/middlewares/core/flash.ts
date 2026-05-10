@@ -1,6 +1,6 @@
-import { type RequestHandler } from 'express';
+import type { Middleware } from '@server/types';
 
-export const flashMiddleware: RequestHandler = (req, res, next) => {
+export const flashMiddleware: Middleware = ({ req, res, next }) => {
     res.locals.errors = req.session.errors || {};
     res.locals.old = req.session.old || {};
 
@@ -9,3 +9,5 @@ export const flashMiddleware: RequestHandler = (req, res, next) => {
 
     next();
 };
+
+export default flashMiddleware;

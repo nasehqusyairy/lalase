@@ -1,6 +1,6 @@
 import session, { type SessionOptions } from 'express-session';
-import type { RequestHandler } from 'express';
 import { APP_SECRET } from '@server/core/config';
+import type { Middleware } from '@server/types';
 
 const options: SessionOptions = {
     secret: APP_SECRET,
@@ -8,6 +8,6 @@ const options: SessionOptions = {
     saveUninitialized: false,
 };
 
-export const sessionMiddleware: RequestHandler = (req, res, next) => {
+export const sessionMiddleware: Middleware = ({ req, res, next }) => {
     session(options)(req, res, next);
 };

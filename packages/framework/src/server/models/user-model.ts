@@ -5,4 +5,4 @@ import type { TUser } from "@shared/types";
 export default db.model('users', {
     fillable: ['name', 'email', 'password'],
     hidden: ['password'],
-}) satisfies Model<TUser>;
+}) as Model<TUser>;
