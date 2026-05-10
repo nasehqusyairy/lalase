@@ -1,13 +1,13 @@
 import { readFileSync } from 'fs';
 import { HttpError, ValidationError } from '@server/core/error';
 import { PRODUCTION } from '@server/core/config';
-import type { Middleware } from '@server/types';
+import type { ErrorHandler } from '@server/types';
 
 /**
  * Error handling middleware - handles all server errors
  * Returns appropriate response based on error type
  */
-export const errorMiddleware: Middleware = ({
+export default (({
     err,
     req,
     res,
@@ -83,4 +83,4 @@ export const errorMiddleware: Middleware = ({
         lineNumber,
         fileContent,
     });
-};
+}) as ErrorHandler;

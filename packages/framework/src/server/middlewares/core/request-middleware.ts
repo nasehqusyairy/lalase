@@ -3,7 +3,7 @@ import { castValue } from '@shared/helpers';
 import { AuthorizationError, ValidationError } from '@server/core/error';
 import type { Middleware, RequestDefinition } from '@server/types';
 
-export const requestMiddleware: Middleware = ({ req, res, next }) => {
+export default (({ req, res, next }) => {
     req.all = () => {
         return deepTrim({
             ...req.query,
@@ -57,4 +57,4 @@ export const requestMiddleware: Middleware = ({ req, res, next }) => {
     };
 
     next();
-};
+}) as Middleware;

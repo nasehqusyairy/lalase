@@ -8,6 +8,6 @@ const options: SessionOptions = {
     saveUninitialized: false,
 };
 
-export const sessionMiddleware: Middleware = ({ req, res, next }) => {
+export default (({ req, res, next }) => {
     session(options)(req, res, next);
-};
+}) as Middleware;

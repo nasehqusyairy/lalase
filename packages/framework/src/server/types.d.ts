@@ -6,6 +6,12 @@ import { ZodType } from 'zod';
  * Custom Middleware type with object destructuring parameter
  */
 export type Middleware = (ctx: {
+    req: Request;
+    res: Response;
+    next: NextFunction;
+}) => void;
+
+export type ErrorHandler = (ctx: {
     err?: Error;
     req: Request;
     res: Response;

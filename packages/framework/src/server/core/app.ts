@@ -1,9 +1,15 @@
-import express, { type Application, type Router } from 'express';
+import express, { type Application } from 'express';
 
-import { PORT, runtimePath, APP_NAME } from './config';
+import { PORT, runtimePath } from './config';
 
 // Middleware registry
-import { errorHandlers, globalMiddlewares, notFoundHandlers, webMiddlewares, apiMiddlewares } from '@server/middlewares/autoloads';
+import {
+    errorHandlers,
+    globalMiddlewares,
+    notFoundHandler,
+    webMiddlewares,
+    apiMiddlewares
+} from '@server/middlewares/autoloads';
 
 // Routes
 import { web } from '@server/routes/web';
@@ -39,9 +45,7 @@ export function createApp(): Application {
         app.use(errorHandler);
     }
 
-    for (const notFoundHandler of notFoundHandlers) {
-        app.use(notFoundHandler);
-    }
+    app.use(notFoundHandler);
 
     return app;
 }

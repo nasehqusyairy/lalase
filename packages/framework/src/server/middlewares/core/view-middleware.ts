@@ -3,7 +3,7 @@ import path from 'path';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
 import { pathToFileURL } from 'url';
 import { PRODUCTION, APP_NAME, runtimePath } from '@server/core/config';
-import { setVite } from './serve.js';
+import { setVite } from './serve-middleware.js';
 import type { Middleware } from '@server/types';
 
 let vite: ViteDevServer | undefined;
@@ -12,7 +12,7 @@ let vite: ViteDevServer | undefined;
  * View middleware - handles rendering React components to HTML
  * Supports both DEV (Vite SSR) and PROD (built bundle) modes
  */
-export const viewMiddleware: Middleware = async ({ req, res, next }) => {
+export default (async ({ req, res, next }) => {
     // Initialize Vite in development mode
     if (!PRODUCTION && !vite) {
         vite = await createViteServer({
@@ -98,7 +98,7 @@ export const viewMiddleware: Middleware = async ({ req, res, next }) => {
     };
 
     next();
-};
+}) as Middleware;
 
 /**
  * Get Vite server instance (for external use)

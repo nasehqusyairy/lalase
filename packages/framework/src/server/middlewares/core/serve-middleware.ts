@@ -23,7 +23,7 @@ export function getViteInstance(): ViteDevServer | undefined {
  * Serve middleware - handles Vite dev server or static files
  * Based on environment (DEV vs PROD)
  */
-export const serveMiddleware: Middleware = async ({ req, res, next }) => {
+export default (async ({ req, res, next }) => {
     if (!PRODUCTION) {
         // DEVELOPMENT: Use Vite dev middlewares
         const vite = getViteInstance();
@@ -37,4 +37,4 @@ export const serveMiddleware: Middleware = async ({ req, res, next }) => {
     }
 
     next();
-};
+}) as Middleware;
