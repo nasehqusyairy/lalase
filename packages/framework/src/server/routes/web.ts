@@ -1,7 +1,9 @@
-import { Route } from '@server/core/router';
+import { createRoute } from '@server/core/router';
 import { Router } from 'express';
 import aboutController from '@server/controllers/about-controller';
 import booksController from '@server/controllers/books-controller';
+
+const Route = createRoute();
 
 Route.get('/', async ({ res }) => {
     res.view('home');

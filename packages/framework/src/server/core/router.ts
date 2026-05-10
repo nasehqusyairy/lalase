@@ -11,13 +11,17 @@ interface RouteMeta {
 }
 
 class RouteBuilder {
-    private router = Router();
+    private router: Router;
     private contextStack: RouteMeta[] = [];
 
     private pendingMeta: RouteMeta = {
         prefix: '',
         middleware: []
     };
+
+    constructor() {
+        this.router = Router();
+    }
 
     /* =====================
      * Internal
@@ -104,4 +108,13 @@ class RouteBuilder {
     }
 }
 
+/**
+ * Create a new RouteBuilder instance
+ * Each route file should call this to get its own router
+ */
+export function createRoute(): RouteBuilder {
+    return new RouteBuilder();
+}
+
+// Default route instance for backward compatibility
 export const Route = new RouteBuilder();

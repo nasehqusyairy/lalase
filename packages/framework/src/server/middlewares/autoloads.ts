@@ -36,8 +36,7 @@ export const globalMiddlewares: ExpressMiddleware[] = [
     // Your global middlewares can be added here
 ];
 export const apilMiddlewares: ExpressMiddleware[] = [
-    // Your api middlewares can be added here
-    example,
+    // Your API middlewares can be added here
 ];
 
 export const webMiddlewares: ExpressMiddleware[] = [
@@ -51,7 +50,7 @@ export const webMiddlewares: ExpressMiddleware[] = [
     viewMiddleware,
     serveMiddleware,
 
-    // Your custom middlewares can be added here
+    // Your web middlewares can be added here
     //
 ];
 
