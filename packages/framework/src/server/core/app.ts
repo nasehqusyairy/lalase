@@ -1,5 +1,6 @@
 import express, { type Application } from 'express';
-
+// @ts-ignore
+import edge from 'express-edge';
 import { PORT, runtimePath } from './config';
 
 // Middleware registry
@@ -24,7 +25,7 @@ export function createApp(): Application {
     // =========================
     // View Engine Configuration
     // =========================
-    app.set('view engine', 'ejs');
+    app.use(edge)
     app.set('views', runtimePath('views'));
 
     // =========================

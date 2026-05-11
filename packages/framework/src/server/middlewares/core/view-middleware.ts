@@ -80,7 +80,7 @@ export default (async ({ req, res, next }) => {
                 };
             }
 
-            // Render the view using EJS
+            // Render the view using Edge
             res.render('app', {
                 appHtml: htmlRender.appHtml,
                 props,

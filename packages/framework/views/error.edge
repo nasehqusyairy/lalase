@@ -295,33 +295,33 @@
     <div class="error-content">
       <div class="error-message">
         <h2><i class="fas fa-bug"></i> Pesan Error:</h2>
-        <p><%= message %></p>
+        <p>{{ message }}</p>
       </div>
 
-      <% if(typeof filePath !== 'undefined'){ %>
+      @if(typeof filePath !== 'undefined')
       <div class="meta-container">
         <div class="meta-card">
           <h3><i class="fas fa-file-code"></i> File</h3>
           <div class="meta-card-content">
-            <%= filePath %>
+            {{ filePath }}
           </div>
         </div>
 
         <div class="meta-card">
           <h3><i class="fas fa-code-branch"></i> Baris</h3>
           <div class="meta-card-content">
-            <%= lineNumber %>
+            {{ lineNumber }}
           </div>
         </div>
 
-        <% if(typeof timestamp !== 'undefined'){ %>
+        @if(typeof timestamp !== 'undefined')
         <div class="meta-card">
           <h3><i class="fas fa-clock"></i> Waktu</h3>
           <div class="meta-card-content">
-            <%= timestamp %>
+            {{ timestamp }}
           </div>
         </div>
-        <% } %>
+        @end
       </div>
 
       <div class="code-container">
@@ -330,14 +330,14 @@
             <i class="fas fa-terminal"></i>
             <span>Kode Error</span>
           </div>
-          <div class="line-number">Baris <%= lineNumber %></div>
+          <div class="line-number">Baris {{ lineNumber }}</div>
         </div>
 
-        <pre class="line-numbers" data-line="<%= lineNumber %>">
-          <code class="language-js" style="position: static;"><%= fileContent %></code>
+        <pre class="line-numbers" data-line="{{ lineNumber }}">
+          <code class="language-js" style="position: static;">{{ fileContent }}</code>
         </pre>
       </div>
-      <% } %>
+      @end
 
       <div class="actions">
         <button class="btn btn-primary" onclick="window.location.reload()">
@@ -355,8 +355,8 @@
 
       <div class="timestamp">
         <i class="fas fa-info-circle"></i>
-        <span>Error ID: <%= typeof errorId !== 'undefined' ? errorId : 'N/A' %> |
-          <%= typeof timestamp !== 'undefined' ? timestamp : new Date().toLocaleString() %></span>
+        <span>Error ID: @if(typeof errorId !== 'undefined') {{ errorId }} @else N/A @end |
+          @if(typeof timestamp !== 'undefined') {{ timestamp }} @else {{ new Date().toLocaleString() }} @end</span>
       </div>
     </div>
   </div>
