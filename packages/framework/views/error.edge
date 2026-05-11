@@ -7,8 +7,10 @@
   <title>Server Error</title>
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.css"
+    rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css"
+    rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <style>
@@ -353,32 +355,29 @@
         </button>
       </div>
 
-      <div class="timestamp">
-        <i class="fas fa-info-circle"></i>
-        <span>Error ID: @if(typeof errorId !== 'undefined') {{ errorId }} @else N/A @end |
-          @if(typeof timestamp !== 'undefined') {{ timestamp }} @else {{ new Date().toLocaleString() }} @end</span>
-      </div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
 
   <script>
     // Tambahkan line highlight setelah Prism selesai memproses
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       if (typeof Prism !== 'undefined' && Prism.plugins.lineHighlight) {
         Prism.highlightAll();
       }
 
       // Tambahkan animasi tambahan
       const errorIcon = document.querySelector('.header-icon');
-      errorIcon.addEventListener('mouseenter', function() {
+      errorIcon.addEventListener('mouseenter', function () {
         this.style.animation = 'pulse 0.5s infinite';
       });
 
-      errorIcon.addEventListener('mouseleave', function() {
+      errorIcon.addEventListener('mouseleave', function () {
         this.style.animation = 'pulse 2s infinite';
       });
     });

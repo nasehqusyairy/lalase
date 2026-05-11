@@ -30,10 +30,6 @@ export default (async ({ req, res, next }) => {
         if (vite) {
             return vite.middlewares(req, res, next);
         }
-    } else {
-        // PRODUCTION: Serve static files
-        const staticPath = runtimePath('dist/client');
-        return express.static(staticPath)(req, res, next);
     }
 
     next();

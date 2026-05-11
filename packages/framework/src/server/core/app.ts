@@ -1,7 +1,7 @@
 import express, { type Application } from 'express';
 // @ts-ignore
 import edge from 'express-edge';
-import { PORT, runtimePath } from './config';
+import { PORT, PRODUCTION, runtimePath } from './config';
 
 // Middleware registry
 import {
@@ -27,6 +27,12 @@ export function createApp(): Application {
     // =========================
     app.use(edge)
     app.set('views', runtimePath('views'));
+
+    if (PRODUCTION) {
+        app.use(express.static(runtimePath('dist/client'), { index: false }));
+    } else {
+        app.use(express.static(runtimePath('public'), { index: false }));
+    }
 
     // =========================
     // Apply Middlewares
