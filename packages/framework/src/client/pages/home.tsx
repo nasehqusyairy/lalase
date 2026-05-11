@@ -1,3 +1,4 @@
+import { Link } from "@inertiajs/react";
 import { useState } from "react";
 
 export default () => {
@@ -6,6 +7,7 @@ export default () => {
         <>
             <h1>Halaman Home</h1>
             <button onClick={() => setCount(count + 1)}>count {count}</button>
+            <Link href={'/books'}>Books</Link>
         </>
     )
 }
