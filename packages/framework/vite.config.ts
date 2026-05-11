@@ -7,7 +7,11 @@ import inertiajs from '@inertiajs/vite';
 
 export default defineConfig({
   plugins: [
-    inertiajs(),
+    inertiajs({
+      ssr: {
+        entry: 'src/client/entry-server.tsx',
+      },
+    }),
     tailwindcss(),
     babel({
       filter: /src\/.*\.(js|jsx|ts|tsx)$/,

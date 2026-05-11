@@ -1,4 +1,5 @@
 // entry-client.tsx
+import { hydrateRoot } from 'react-dom/client';
 import './main.css';
 import { createInertiaApp } from '@inertiajs/react';
 
@@ -7,5 +8,8 @@ createInertiaApp({
     resolve: name => {
         const pages = import.meta.glob('./pages/**/*.tsx');
         return pages[`./pages/${name}.tsx`]() as any;
+    },
+    setup({ el, App, props }) {
+        hydrateRoot(el, <App {...props} />);
     }
 });

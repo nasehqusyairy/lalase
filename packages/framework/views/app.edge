@@ -8,12 +8,7 @@
 </head>
 
 <body>
-    <script data-page="app" type="application/json">{{{ JSON.stringify(page) }}}</script>
-    <div id="app">{{{ appHtml }}}</div>
-
-    @if(process.env.APP_ENV !== 'production')
-    <script type="module" src="/src/client/entry-client.tsx"></script>
-    @end
+    {{{ appHtml }}}
 </body>
 
 </html>

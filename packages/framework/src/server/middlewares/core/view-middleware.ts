@@ -1,5 +1,4 @@
 import { readFileSync } from 'fs';
-import path from 'path';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
 import { PRODUCTION, APP_NAME, runtimePath } from '@server/core/config';
 import { setVite } from './serve-middleware.js';
@@ -36,7 +35,31 @@ export default (async ({ req, res, next }) => {
                 return res.json(page);
             }
 
-            // Kunjungan pertama — render HTML shell kosong saja (CSR)
+            // SSR: Pre-render React components on server
+            let appHtml = '';
+
+            if (!PRODUCTION && vite) {
+                // In dev mode, use dynamic import to load the SSR entry
+                try {
+                    const mod = await vite.ssrLoadModule('src/client/entry-server');
+                    appHtml = (await mod.render(page)).body
+                } catch (err) {
+                    console.error('SSR Error:', err);
+                    // Fallback to CSR if SSR fails
+                    appHtml = '';
+                }
+            } else {
+                // In production, import the pre-built SSR module
+                try {
+                    const mod = await import(runtimePath('dist/ssr/entry-server.js'));
+                    appHtml = (await mod.render(page)).body;
+                } catch (err) {
+                    console.error('SSR Error:', err);
+                    appHtml = '';
+                }
+            }
+
+            // Kunjungan pertama — render HTML dengan SSR
             let viteHead = '';
 
             if (!PRODUCTION && vite) {
@@ -52,7 +75,7 @@ export default (async ({ req, res, next }) => {
             }
 
             res.render('app', {
-                appHtml: '',   // Kosong — React akan hydrate/mount di client
+                appHtml,   // SSR rendered HTML
                 page,
                 title,
                 viteHead,
