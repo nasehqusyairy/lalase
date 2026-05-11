@@ -3,18 +3,16 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>
-        {{ title }}
-    </title>
+    <title>{{ title }}</title>
     {{{ viteHead }}}
 </head>
 
 <body>
-    <div id="root" data-page='{{ JSON.stringify({ component, props }) }}'>{{{ appHtml }}}</div>
+    <script data-page="app" type="application/json">{{{ JSON.stringify(page) }}}</script>
+    <div id="app">{{{ appHtml }}}</div>
 
-    @if(process.env.APP_ENV === 'production')
-    @else
-        <script type="module" src="/src/client/entry-client.tsx"></script>
+    @if(process.env.APP_ENV !== 'production')
+    <script type="module" src="/src/client/entry-client.tsx"></script>
     @end
 </body>
 

@@ -3,9 +3,11 @@ import react from '@vitejs/plugin-react-swc'
 import babel from 'vite-plugin-babel';
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite'
+import inertiajs from '@inertiajs/vite';
 
 export default defineConfig({
   plugins: [
+    inertiajs(),
     tailwindcss(),
     babel({
       filter: /src\/.*\.(js|jsx|ts|tsx)$/,
