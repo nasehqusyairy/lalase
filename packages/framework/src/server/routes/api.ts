@@ -2,15 +2,15 @@ import { createRoute } from '@server/core/router';
 import userModel from '@server/models/user-model';
 import { Router } from 'express';
 
-const Route = createRoute();
+const route = createRoute();
 
-Route.get('/', async ({ res }) => {
+route.get('/', async ({ res }) => {
     res.json({ message: 'Welcome to the API' });
 }).name('api.index');
 
-Route.get('/users', async ({ res }) => {
+route.get('/users', async ({ res }) => {
     const users = await userModel.all()
     res.json({ data: { users } });
 }).name('api.users');
 
-export const api: Router = Route.getRouter()
+export const api: Router = route.getRouter()
