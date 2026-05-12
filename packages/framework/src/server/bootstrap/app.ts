@@ -1,10 +1,9 @@
 import express, { type Application } from 'express';
 // @ts-ignore
 import edge from 'express-edge';
-import { PORT, PRODUCTION } from './config';
+import { PORT, PRODUCTION } from '@server/config/app';
 import { getPath } from '@server/helpers';
 
-// Middleware registry
 import {
     errorHandlers,
     globalMiddlewares,
@@ -13,20 +12,13 @@ import {
     apiMiddlewares
 } from './middleware';
 
-// Routes
 import { web } from '@server/routes/web';
 import { api } from '@server/routes/api';
 
-/**
- * Create and configure Express application
- */
 export function createApp(): Application {
     const app = express();
 
-    // =========================
-    // View Engine Configuration
-    // =========================
-    app.use(edge)
+    app.use(edge);
     app.set('views', getPath('views'));
 
     if (PRODUCTION) {
@@ -35,17 +27,10 @@ export function createApp(): Application {
         app.use(express.static(getPath('public'), { index: false }));
     }
 
-    // =========================
-    // Apply Middlewares
-    // =========================
-    // Loop through middlewares array and apply each
     for (const middleware of globalMiddlewares) {
         app.use(middleware);
     }
 
-    // =========================
-    // Routes
-    // =========================
     app.use('/api', ...apiMiddlewares, api);
     app.use(webMiddlewares, web);
 
@@ -58,9 +43,6 @@ export function createApp(): Application {
     return app;
 }
 
-/**
- * Start the server
- */
 export async function startServer(app: Application): Promise<void> {
     return new Promise((resolve) => {
         app.listen(PORT, () => {

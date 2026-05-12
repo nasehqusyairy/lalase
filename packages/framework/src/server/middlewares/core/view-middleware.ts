@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
-import { PRODUCTION, APP_NAME } from '@server/core/config';
+import { PRODUCTION, APP_NAME } from '@server/config/app';
 import type { Middleware } from '@server/types';
 import { getPath } from '@server/helpers';
 import { setVite } from './serve-middleware';

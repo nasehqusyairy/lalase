@@ -1,4 +1,4 @@
-import { createRoute } from '@server/core/router';
+import { createRoute } from '@server/helpers';
 import userModel from '@server/models/user-model';
 import { Router } from 'express';
 

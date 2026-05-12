@@ -1,4 +1,4 @@
-import { createApp, startServer } from '@server/core/app';
+import { createApp, startServer } from '@server/bootstrap/app';
 
 /**
  * Main entry point for the Express server

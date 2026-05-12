@@ -22,4 +22,3 @@ export class AuthorizationError extends HttpError {
         super(message, 403);
     }
 }
-

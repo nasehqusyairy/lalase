@@ -1,7 +1,7 @@
-import { createRoute } from '@server/core/router';
 import { Router } from 'express';
 import aboutController from '@server/controllers/about-controller';
 import usersController from '@server/controllers/users-controller';
+import { createRoute } from '@server/helpers';
 
 const route = createRoute();
 

@@ -1,5 +1,5 @@
 import { castValue } from '@shared/helpers';
-import { AuthorizationError, ValidationError } from '@server/core/error';
+import { AuthorizationError, ValidationError } from '@server/lib/error';
 import type { Middleware, RequestDefinition } from '@server/types';
 
 function deepTrim<T>(value: T): T {

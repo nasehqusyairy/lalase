@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
-import { HttpError, ValidationError } from '@server/core/error';
-import { PRODUCTION } from '@server/core/config';
+import { HttpError, ValidationError } from '@server/lib/error';
+import { PRODUCTION } from '@server/config/app';
 import type { ErrorHandler } from '@server/types';
 
 /**

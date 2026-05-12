@@ -1,5 +1,5 @@
 import session, { type SessionOptions } from 'express-session';
-import { APP_SECRET } from '@server/core/config';
+import { APP_SECRET } from '@server/config/app';
 import type { Middleware } from '@server/types';
 
 const options: SessionOptions = {

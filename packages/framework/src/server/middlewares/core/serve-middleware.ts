@@ -1,4 +1,4 @@
-import { PRODUCTION } from '@server/core/config';
+import { PRODUCTION } from '@server/config/app';
 import type { ViteDevServer } from 'vite';
 import type { Middleware } from '@server/types';
 

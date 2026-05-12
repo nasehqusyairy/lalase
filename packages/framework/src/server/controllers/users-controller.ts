@@ -1,4 +1,4 @@
-import { rule } from "@server/core/validation";
+import { rule } from "@server/lib/validation";
 import userModel from "@server/models/user-model";
 import type { Controller } from "@server/types";
 
