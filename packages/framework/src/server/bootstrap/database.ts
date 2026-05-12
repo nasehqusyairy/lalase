@@ -9,7 +9,7 @@ import {
     DB_NAME
 } from '@server/config/database';
 
-export const db = createPool({
+export const { createModel, getConnection: db, transaction } = createPool({
     client: DB_CONNECTION,
     connection: {
         host: DB_HOST,

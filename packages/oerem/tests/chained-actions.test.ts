@@ -9,7 +9,7 @@ describe('Direct vs Chained Actions', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     it('should mass-update records matching a query without requiring an ID', async () => {
@@ -34,7 +34,7 @@ describe('Direct vs Chained Actions', () => {
         const ormCheck = await ctx.User.query((q) => q.where('username', 'spam_user')).get();
         expect(ormCheck).toHaveLength(0);
 
-        const dbCheck = await ctx.db.getConnection().table('users').where('username', 'spam_user').first();
+        const dbCheck = await ctx.db().table('users').where('username', 'spam_user').first();
         expect(dbCheck).toBeUndefined();
     });
 
@@ -46,7 +46,7 @@ describe('Direct vs Chained Actions', () => {
         const visible = await ctx.User.all();
         expect(visible.some((u) => u.username === 'temp_user')).toBe(false);
 
-        const raw = await ctx.db.getConnection().table('users').where('username', 'temp_user').first();
+        const raw = await ctx.db().table('users').where('username', 'temp_user').first();
         expect(raw.deleted_at).not.toBeNull();
     });
 

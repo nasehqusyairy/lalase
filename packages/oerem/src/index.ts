@@ -57,18 +57,13 @@ export function createPool(config: Knex.Config) {
 
     return {
         getConnection,
-        async transaction<T>(callback: () => Promise<T>) {
+        async transaction(callback: () => Promise<void>) {
             return connection.transaction(async (trx) => {
                 return await trxStore.run(trx, callback);
             })
         },
-        model: model(getConnection),
-        async close() { await connection.destroy(); }
+        createModel: model(getConnection),
     };
-}
-
-export function getSchemaBuilder(pool: ReturnType<typeof createPool>) {
-    return pool.getConnection().schema;
 }
 
 export type PoolInstance = ReturnType<typeof createPool>;

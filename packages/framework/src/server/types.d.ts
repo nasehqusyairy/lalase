@@ -55,3 +55,11 @@ export type RequestDefinition<T> = {
 };
 export type ControllerAction = (ctx: { req: Request, res: Response }) => Promise<void> | void;
 export type Controller = Record<string, ControllerAction>;
+
+export type MiddlewareConfig = {
+    globalMiddlewares: Middleware[];
+    apiMiddlewares: Middleware[];
+    webMiddlewares: Middleware[];
+    errorHandlers: ErrorHandler[];
+    notFoundHandler: Middleware;
+};

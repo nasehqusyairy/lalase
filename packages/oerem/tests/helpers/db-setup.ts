@@ -1,6 +1,5 @@
 import {
     createPool,
-    getSchemaBuilder,
     type BelongsToManyColumn,
     type Model,
     type SoftDeleteColumn,
@@ -66,7 +65,7 @@ export type TestDb = Awaited<ReturnType<typeof createTestDb>>;
  * fully independent context with no shared state between test suites.
  */
 export async function createTestDb() {
-    const db = createPool({
+    const { createModel, getConnection: db, transaction } = createPool({
         client: 'sqlite3',
         connection: { filename: ':memory:' },
         useNullAsDefault: true,
@@ -74,14 +73,14 @@ export async function createTestDb() {
 
     // ── Model Definitions ───────────────────────────────────────────────────
 
-    const Role = db.model<IRole, IRoleRelations>('roles', {
+    const Role = createModel<IRole, IRoleRelations>('roles', {
         fillable: ['name'],
         relations: {
             users: belongsToMany(() => User, 'role_user', 'role_id', 'user_id'),
         },
     });
 
-    const User: Model<IUser, IUserRelations> = db.model('users', {
+    const User: Model<IUser, IUserRelations> = createModel('users', {
         fillable: ['username', 'email', 'balance'],
         softDelete: true,
         relations: {
@@ -90,14 +89,14 @@ export async function createTestDb() {
         },
     });
 
-    const Post = db.model<IPost, IPostRelations>('posts', {
+    const Post = createModel<IPost, IPostRelations>('posts', {
         fillable: ['user_id', 'title', 'status'],
         relations: {
             comments: hasMany(() => Comment, 'post_id'),
         },
     });
 
-    const Comment = db.model<IComment, ICommentRelations>('comments', {
+    const Comment = createModel<IComment, ICommentRelations>('comments', {
         fillable: ['post_id', 'user_id', 'content'],
         relations: {
             user: belongsTo(() => User, 'user_id'),
@@ -106,7 +105,7 @@ export async function createTestDb() {
 
     // ── Schema Setup ────────────────────────────────────────────────────────
 
-    await getSchemaBuilder(db).createTable('users', (table) => {
+    await db().schema.createTable('users', (table) => {
         table.increments('id').primary();
         table.string('username');
         table.string('email');
@@ -115,18 +114,18 @@ export async function createTestDb() {
         table.datetime('deleted_at').nullable();
     });
 
-    await getSchemaBuilder(db).createTable('roles', (table) => {
+    await db().schema.createTable('roles', (table) => {
         table.increments('id');
         table.string('name');
         table.timestamps(true, true);
     });
 
-    await getSchemaBuilder(db).createTable('role_user', (table) => {
+    await db().schema.createTable('role_user', (table) => {
         table.integer('user_id');
         table.integer('role_id');
     });
 
-    await getSchemaBuilder(db).createTable('posts', (table) => {
+    await db().schema.createTable('posts', (table) => {
         table.increments('id');
         table.integer('user_id').unsigned();
         table.string('title');
@@ -134,7 +133,7 @@ export async function createTestDb() {
         table.timestamps(true, true);
     });
 
-    await getSchemaBuilder(db).createTable('comments', (table) => {
+    await db().schema.createTable('comments', (table) => {
         table.increments('id');
         table.integer('post_id').unsigned();
         table.integer('user_id').unsigned();
@@ -142,5 +141,5 @@ export async function createTestDb() {
         table.timestamps(true, true);
     });
 
-    return { db, User, Post, Comment, Role };
+    return { db, transaction, createModel, User, Post, Comment, Role };
 }

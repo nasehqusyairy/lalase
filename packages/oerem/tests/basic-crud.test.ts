@@ -9,7 +9,7 @@ describe('Basic CRUD Operations', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     it('should create a record with fillable fields and auto-timestamps', async () => {
@@ -69,7 +69,7 @@ describe('Basic CRUD Operations', () => {
         await ctx.User.softDelete(2);
 
         const visible = await ctx.User.all();
-        const raw = await ctx.db.getConnection().table('users').where('id', 2).first();
+        const raw = await ctx.db().table('users').where('id', 2).first();
 
         expect(visible).toHaveLength(1);
         expect(visible[0].username).toBe('ghozali_updated');
@@ -78,7 +78,7 @@ describe('Basic CRUD Operations', () => {
     });
 
     it('should throw when soft delete is called on a model with softDelete disabled', async () => {
-        const StrictModel = ctx.db.model('other_table', { softDelete: false });
+        const StrictModel = ctx.createModel('other_table', { softDelete: false });
 
         await expect(StrictModel.softDelete(1)).rejects.toThrow('Soft delete disabled');
     });

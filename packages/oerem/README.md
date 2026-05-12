@@ -74,7 +74,7 @@ export type TRUser = {
     }>
 }
 
-export const User: Model<TUser, TRUser> = db.model('users', {
+export const User: Model<TUser, TRUser> = createModel('users', {
   fillable: ['name', 'email','password'],
   hidden:['password'],
   softDelete: true,

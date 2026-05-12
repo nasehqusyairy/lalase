@@ -12,7 +12,7 @@ describe('Knex Native Features Compatibility', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     // ── Field Aliasing ───────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ describe('Knex Native Features Compatibility', () => {
 
     it('should support knex.raw() for complex column expressions', async () => {
         const results = await ctx.User.query((q) =>
-            q.select('username', ctx.db.getConnection().raw('LENGTH(username) as name_length'))
+            q.select('username', ctx.db().raw('LENGTH(username) as name_length'))
                 .where('username', 'ghozali')
         ).get();
 
@@ -137,7 +137,7 @@ describe('Knex Native Features Compatibility', () => {
         const results = await ctx.User.query((q) =>
             q.select('username')
                 .groupBy('username')
-                .having(ctx.db.getConnection().raw('COUNT(id)'), '>', 0)
+                .having(ctx.db().raw('COUNT(id)'), '>', 0)
         ).get();
 
         expect(results.length).toBeGreaterThan(0);

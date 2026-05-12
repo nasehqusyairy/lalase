@@ -1,8 +1,8 @@
 import type { Model } from "@lalase/oerem";
-import { db } from '@server/bootstrap/database';
+import { createModel } from "@server/bootstrap/database";
 import type { TUser } from "@shared/types";
 
-export default db.model('users', {
+export default createModel('users', {
     fillable: ['name', 'email', 'password'],
     hidden: ['password'],
 }) as Model<TUser>;

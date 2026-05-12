@@ -1,44 +1,59 @@
-import express, { type Application } from 'express';
+import express, {
+    type Application,
+    type ErrorRequestHandler,
+    type RequestHandler,
+} from 'express';
 // @ts-ignore
 import edge from 'express-edge';
 import { PORT, PRODUCTION } from '@server/config/app';
 import { getPath } from '@server/helpers';
-
-import {
-    errorHandlers,
-    globalMiddlewares,
-    notFoundHandler,
-    webMiddlewares,
-    apiMiddlewares
-} from './middleware';
-
 import { web } from '@server/routes/web';
 import { api } from '@server/routes/api';
+import type { ErrorHandler, Middleware } from '@server/types';
+import middlewareConfig from './middleware';
+
+const toRequestHandler = (middleware: Middleware): RequestHandler => {
+    return (req, res, next) => {
+        middleware({ req, res, next });
+    };
+};
+
+const toErrorHandler = (errorHandler: ErrorHandler): ErrorRequestHandler => {
+    return (err, req, res, next) => {
+        errorHandler({ err, req, res, next });
+    };
+};
 
 export function createApp(): Application {
     const app = express();
 
+    // Set up view engine and static files
     app.use(edge);
     app.set('views', getPath('views'));
 
+    // Serve static files from the appropriate directory based on environment
     if (PRODUCTION) {
         app.use(express.static(getPath('dist/client'), { index: false }));
     } else {
         app.use(express.static(getPath('public'), { index: false }));
     }
 
-    for (const middleware of globalMiddlewares) {
-        app.use(middleware);
+    // Apply global middlewares
+    for (const middleware of middlewareConfig.globalMiddlewares) {
+        app.use(toRequestHandler(middleware));
     }
 
-    app.use('/api', ...apiMiddlewares, api);
-    app.use(webMiddlewares, web);
+    // Set up API and web routes with their respective middlewares
+    app.use('/api', ...middlewareConfig.apiMiddlewares.map(toRequestHandler), api);
+    app.use(middlewareConfig.webMiddlewares.map(toRequestHandler), web);
 
-    for (const errorHandler of errorHandlers) {
-        app.use(errorHandler);
+    // Apply error handlers
+    for (const errorHandler of middlewareConfig.errorHandlers) {
+        app.use(toErrorHandler(errorHandler));
     }
 
-    app.use(notFoundHandler);
+    // Handle 404 Not Found
+    app.use(toRequestHandler(middlewareConfig.notFoundHandler));
 
     return app;
 }

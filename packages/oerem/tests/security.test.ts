@@ -9,7 +9,7 @@ describe('Security & Auditor Constraints', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     // ── Illegal Operation Detection ──────────────────────────────────────────
@@ -31,7 +31,7 @@ describe('Security & Auditor Constraints', () => {
             .rejects
             .toThrow('Oerem: Illegal write operation detected in a read query!');
 
-        const dbCheck = await ctx.db.getConnection().table('users').where('username', 'hacker').first();
+        const dbCheck = await ctx.db().table('users').where('username', 'hacker').first();
         expect(dbCheck).toBeUndefined();
     });
 
@@ -87,7 +87,7 @@ describe('Security & Auditor Constraints', () => {
             capturedSql = obj.sql;
         };
 
-        ctx.db.getConnection().on('query', tracker);
+        ctx.db().on('query', tracker);
 
         const pending = ctx.User.query((q) => q.where('username', 'lazy_user'));
         expect(queryExecuted, 'No SQL should be sent before .get() is called').toBe(false);
@@ -97,14 +97,14 @@ describe('Security & Auditor Constraints', () => {
         expect(capturedSql).toContain('select');
         expect(capturedSql).toContain('`username` = ?');
 
-        ctx.db.getConnection().removeListener('query', tracker);
+        ctx.db().removeListener('query', tracker);
     });
 
     it('should intercept an illegal query before it reaches the database', async () => {
         let sqlSentToDb = false;
         const tracker = () => { sqlSentToDb = true; };
 
-        ctx.db.getConnection().on('query', tracker);
+        ctx.db().on('query', tracker);
 
         const illegalUpdate = ctx.User.query((q) => (q as any).update({ username: 'hacker' }));
 
@@ -115,13 +115,13 @@ describe('Security & Auditor Constraints', () => {
         }
 
         expect(sqlSentToDb, 'Illegal SQL must not reach the database').toBe(false);
-        ctx.db.getConnection().removeListener('query', tracker);
+        ctx.db().removeListener('query', tracker);
     });
 
     // ── Field Visibility & Guards ────────────────────────────────────────────
 
     it('should strip fields listed in the hidden option from query results', async () => {
-        const SecretUser = ctx.db.model<any>('users', {
+        const SecretUser = ctx.createModel<any>('users', {
             fillable: ['username', 'email'],
             hidden: ['email'],
         });
@@ -135,7 +135,7 @@ describe('Security & Auditor Constraints', () => {
     });
 
     it('should block create and update when a guarded field is present in the payload', async () => {
-        const GuardedUser = ctx.db.model<any>('users', {
+        const GuardedUser = ctx.createModel<any>('users', {
             guarded: ['balance'],
             fillable: ['username', 'balance'],
         });
@@ -153,7 +153,7 @@ describe('Security & Auditor Constraints', () => {
     });
 
     it('should throw when a field outside the fillable list is passed to create()', async () => {
-        const RestrictedUser = ctx.db.model<any>('users', { fillable: ['username'] });
+        const RestrictedUser = ctx.createModel<any>('users', { fillable: ['username'] });
 
         await expect(
             RestrictedUser.create({ username: 'ali', email: 'ali@test.com' })

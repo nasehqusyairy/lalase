@@ -26,7 +26,7 @@ describe('Eager Loading (Relations)', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     it('should load a simple hasMany relationship', async () => {

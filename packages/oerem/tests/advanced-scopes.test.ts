@@ -9,7 +9,7 @@ describe('Advanced Scopes & Batch Operations', () => {
     });
 
     afterAll(async () => {
-        await ctx.db.close();
+        await ctx.db().destroy();
     });
 
     it('should perform batch insert with fillable filtering and auto-timestamps', async () => {
