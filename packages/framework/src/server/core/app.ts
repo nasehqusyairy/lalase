@@ -1,7 +1,8 @@
 import express, { type Application } from 'express';
 // @ts-ignore
 import edge from 'express-edge';
-import { PORT, PRODUCTION, runtimePath } from './config';
+import { PORT, PRODUCTION } from './config';
+import { getPath } from '@server/helpers';
 
 // Middleware registry
 import {
@@ -10,7 +11,7 @@ import {
     notFoundHandler,
     webMiddlewares,
     apiMiddlewares
-} from '@server/middlewares/autoloads';
+} from './middleware';
 
 // Routes
 import { web } from '@server/routes/web';
@@ -26,12 +27,12 @@ export function createApp(): Application {
     // View Engine Configuration
     // =========================
     app.use(edge)
-    app.set('views', runtimePath('views'));
+    app.set('views', getPath('views'));
 
     if (PRODUCTION) {
-        app.use(express.static(runtimePath('dist/client'), { index: false }));
+        app.use(express.static(getPath('dist/client'), { index: false }));
     } else {
-        app.use(express.static(runtimePath('public'), { index: false }));
+        app.use(express.static(getPath('public'), { index: false }));
     }
 
     // =========================

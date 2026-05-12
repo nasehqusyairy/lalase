@@ -1,6 +1,21 @@
-import { Router, type RequestHandler } from 'express';
-import { handler } from './handler';
+import {
+    Router,
+    type NextFunction,
+    type Request,
+    type RequestHandler,
+    type Response
+} from 'express';
 import type { ControllerAction } from '../types';
+
+function handler(action: ControllerAction) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        try {
+            return action({ req, res });
+        } catch (err) {
+            next(err);
+        }
+    };
+}
 
 type Middleware = RequestHandler | string;
 

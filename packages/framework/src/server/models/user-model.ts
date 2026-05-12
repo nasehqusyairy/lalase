@@ -1,5 +1,5 @@
 import type { Model } from "@lalase/oerem";
-import { db } from "@server/database/db";
+import { db } from "@server/core/database";
 import type { TUser } from "@shared/types";
 
 export default db.model('users', {

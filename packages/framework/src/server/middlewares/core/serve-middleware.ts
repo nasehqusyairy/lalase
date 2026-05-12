@@ -1,5 +1,4 @@
-import express from 'express';
-import { PRODUCTION, runtimePath } from '@server/core/config';
+import { PRODUCTION } from '@server/core/config';
 import type { ViteDevServer } from 'vite';
 import type { Middleware } from '@server/types';
 

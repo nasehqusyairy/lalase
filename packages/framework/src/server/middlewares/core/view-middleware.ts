@@ -1,8 +1,9 @@
 import { readFileSync } from 'fs';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
-import { PRODUCTION, APP_NAME, runtimePath } from '@server/core/config';
-import { setVite } from './serve-middleware.js';
+import { PRODUCTION, APP_NAME } from '@server/core/config';
 import type { Middleware } from '@server/types';
+import { getPath } from '@server/helpers';
+import { setVite } from './serve-middleware';
 
 let vite: ViteDevServer | undefined;
 
@@ -51,7 +52,7 @@ export default (async ({ req, res, next }) => {
             } else {
                 // In production, import the pre-built SSR module
                 try {
-                    const mod = await import(runtimePath('dist/ssr/entry-server.js'));
+                    const mod = await import(getPath('dist/ssr/entry-server.js'));
                     appHtml = (await mod.render(page)).body;
                 } catch (err) {
                     console.error('SSR Error:', err);
@@ -69,7 +70,7 @@ export default (async ({ req, res, next }) => {
                 );
             } else {
                 // Di production, baca asset manifest dari index.html hasil build
-                viteHead = readFileSync(runtimePath('dist/client/index.html'), 'utf-8')
+                viteHead = readFileSync(getPath('dist/client/index.html'), 'utf-8')
                     .match(/<head>([\s\S]*?)<\/head>/)?.[1]
                     ?.replace(/<title>.*?<\/title>/, '') ?? '';
             }

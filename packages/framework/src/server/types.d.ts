@@ -26,6 +26,10 @@ declare global {
                 props?: Record<string, any>,
                 title?: string
             ) => Promise<any>;
+            flash: {
+                errors?: Record<string, string[]>;
+                old?: Record<string, any>;
+            };
         }
         interface Request {
             validate<T>(request: RequestDefinition<T>): Promise<T>;
