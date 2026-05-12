@@ -1,13 +1,10 @@
-import { fileURLToPath } from 'url';
 import path from 'path';
 
 // Environment configuration
 export const PRODUCTION = process.env.APP_ENV === 'production';
 
-// Get the directory of the server.ts file (project root)
-// From server/core/config.ts: go up 3 levels (core -> server -> src -> framework root)
-const serverTsPath = fileURLToPath(new URL(!PRODUCTION ? '../../../server.ts' : '../server.ts', import.meta.url));
-export const ROOT_PATH = path.dirname(serverTsPath);
+// Get the project root directory (where server.ts is executed)
+export const ROOT_PATH = path.resolve(process.cwd());
 
 export const PORT = process.env.PORT || 5173;
 export const APP_NAME = process.env.APP_NAME || 'react-monolith';
