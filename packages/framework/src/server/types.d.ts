@@ -1,6 +1,5 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import 'express-session';
-import { ZodType } from 'zod';
 
 /**
  * Custom Middleware type with object destructuring parameter
@@ -51,7 +50,7 @@ export { };
 
 export type RequestDefinition<T> = {
     authorize?: () => boolean | Promise<boolean>;
-    schema: ZodType<T>;
+    schema: any;
 };
 export type ControllerAction = (ctx: { req: Request, res: Response }) => Promise<void> | void;
 export type Controller = Record<string, ControllerAction>;

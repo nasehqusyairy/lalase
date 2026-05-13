@@ -3,15 +3,9 @@ import react from '@vitejs/plugin-react-swc'
 import babel from 'vite-plugin-babel';
 import path from 'path';
 import tailwindcss from '@tailwindcss/vite'
-import inertiajs from '@inertiajs/vite';
 
 export default defineConfig({
   plugins: [
-    inertiajs({
-      ssr: {
-        entry: 'src/client/entry-server.tsx',
-      },
-    }),
     tailwindcss(),
     babel({
       filter: /src\/.*\.(js|jsx|ts|tsx)$/,
@@ -30,9 +24,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
       '@client': path.resolve(__dirname, './src/client'),
-      '@server': path.resolve(__dirname, './src/server'),
       '@shared': path.resolve(__dirname, './src/shared'),
     },
   }
