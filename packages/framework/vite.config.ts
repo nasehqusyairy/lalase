@@ -27,5 +27,11 @@ export default defineConfig({
       '@client': path.resolve(__dirname, './src/client'),
       '@shared': path.resolve(__dirname, './src/shared'),
     },
-  }
+  },
+  build: {
+    manifest: true,
+    rollupOptions: {
+      input: './src/client/entry-client.tsx',
+    },
+  },
 })

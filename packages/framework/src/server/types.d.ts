@@ -20,11 +20,13 @@ export type ErrorHandler = (ctx: {
 declare global {
     namespace Express {
         interface Response {
-            view: (
-                component: string,
-                props?: Record<string, any>,
-                title?: string
-            ) => Promise<any>;
+            inertia: {
+                render: (
+                    component: string,
+                    props?: Record<string, any>,
+                    title?: string
+                ) => Promise<any>;
+            };
             flash: {
                 errors?: Record<string, string[]>;
                 old?: Record<string, any>;

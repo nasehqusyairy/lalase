@@ -2,7 +2,7 @@ import type { MiddlewareConfig } from '@server/types';
 import defaultHandler from '@server/error-handlers/core/default-handler';
 import sessionMiddleware from '@server/middlewares/core/session-middleware';
 import flashMiddleware from '@server/middlewares/core/flash-middleware';
-import viewMiddleware from '@server/middlewares/core/view-middleware';
+import inertiaMiddleware from '@server/middlewares/core/inertia-middleware';
 import serveMiddleware from '@server/middlewares/core/serve-middleware';
 import notFoundMiddleware from '@server/middlewares/core/not-found-middleware';
 import requestMiddleware from '@server/middlewares/core/request-middleware';
@@ -26,7 +26,7 @@ export default {
         multipartParserMiddleware,
         requestMiddleware,
         flashMiddleware,
-        viewMiddleware,
+        inertiaMiddleware,
         serveMiddleware
     ],
 

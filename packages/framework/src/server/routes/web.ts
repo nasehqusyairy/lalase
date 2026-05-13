@@ -6,7 +6,7 @@ import { createRoute } from '@server/helpers';
 const route = createRoute();
 
 route.get('/', async ({ res }) => {
-    res.view('home');
+    res.inertia.render('home');
 }).name('home.index');
 
 route.prefix('/salam').group(() => {

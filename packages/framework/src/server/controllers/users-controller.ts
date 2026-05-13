@@ -5,7 +5,7 @@ export default {
 
     async index({ res }) {
         const users = await userModel.all()
-        res.view('users/index', { users })
+        res.inertia.render('users/index', { users })
     },
 
     async create({ req, res }) {
