@@ -1,16 +1,18 @@
-import { createRoute } from '@server/helpers';
+import { createRoute } from '@server/helpers/route';
 import userModel from '@server/models/user-model';
-import { Router } from 'express';
+import type { Application } from 'express';
 
-const route = createRoute();
+export default (app: Application) => {
+    const route = createRoute(app);
 
-route.get('/', async ({ res }) => {
-    res.json({ message: 'Welcome to the API' });
-}).name('api.index');
+    route.get('/', async ({ res }) => {
+        res.json({ message: 'Welcome to the API' });
+    }).name('api.index');
 
-route.get('/users', async ({ res }) => {
-    const users = await userModel.all()
-    res.json({ data: { users } });
-}).name('api.users');
+    route.get('/users', async ({ res }) => {
+        const users = await userModel.all()
+        res.json({ data: { users } });
+    }).name('api.users');
 
-export const api: Router = route.getRouter()
+    return route.getRouter()
+}

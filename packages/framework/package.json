@@ -3,17 +3,22 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec tsx --env-file=.env server.ts",
+    "dev": "nodemon --exec tsx --tsconfig tsconfig.server.json --env-file=.env src/server.ts",
     "build": "npm run build:client && npm run build:ssr && npm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:ssr": "vite build --ssr src/client/entry-server.tsx --outDir dist/ssr",
-    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/index.js --packages=external",
-    "start": "node --env-file=.env dist/index.js"
+    "build:server": "npm run build:server:tsc && npm run build:server:alias && npm run build:server:fix",
+    "build:server:tsc": "tsc -p tsconfig.server.json --composite false --declaration false",
+    "build:server:alias": "tsc-alias -p tsconfig.server.json",
+    "build:server:fix": "tsc-esm-fix --target=dist",
+    "start": "node --env-file=.env dist/server.js"
   },
   "dependencies": {
     "@inertiajs/react": "^3.1.1",
     "@lalase/oerem": "workspace:*",
+    "@vinejs/vine": "^4.4.0",
     "babel-plugin-react-compiler": "^1.0.0",
+    "edge.js": "^6.5.0",
     "express": "^5.2.1",
     "express-edge": "^3.0.0",
     "express-session": "^1.19.0",
@@ -22,6 +27,7 @@
     "mysql2": "^3.22.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "tailwindcss": "^4.3.0",
     "vite-plugin-babel": "^1.4.1"
   },
   "devDependencies": {
@@ -37,7 +43,10 @@
     "@vitejs/plugin-react-swc": "^4.2.2",
     "esbuild": "0.27.4",
     "nodemon": "^3.1.11",
+    "tsc-alias": "^1.8.17",
+    "tsc-esm-fix": "^3.1.2",
     "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
     "vite": "^7.2.4"
   }
 }

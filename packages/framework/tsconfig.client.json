@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "composite": true,
         "jsx": "react-jsx",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
@@ -7,7 +8,6 @@
         "module": "ESNext",
         "moduleResolution": "bundler",
         "strict": true,
-        "composite": true,
         "types": [
             "vite/client"
         ],

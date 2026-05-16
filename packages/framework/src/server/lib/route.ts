@@ -1,23 +1,24 @@
 import {
     Router,
+    type Application,
     type NextFunction,
     type Request,
     type RequestHandler,
     type Response
 } from 'express';
-import type { ControllerAction } from '@server/types';
-
-type Middleware = RequestHandler | string;
+import type { ControllerAction, Middleware } from '@server/types';
+import { toRequestHandler } from '@server/helpers/middleware';
 
 interface RouteMeta {
     prefix: string;
-    middleware: Middleware[];
+    middleware: RequestHandler[];
     name?: string;
 }
 
 export class RouteBuilder {
     private router: Router;
     private contextStack: RouteMeta[] = [];
+    private app: Application;
 
     private pendingMeta: RouteMeta = {
         prefix: '',
@@ -34,7 +35,8 @@ export class RouteBuilder {
         };
     }
 
-    constructor() {
+    constructor(app: Application) {
+        this.app = app
         this.router = Router();
     }
 
@@ -84,10 +86,8 @@ export class RouteBuilder {
         return this;
     }
 
-    middleware(middleware: Middleware | Middleware[]) {
-        this.pendingMeta.middleware.push(
-            ...(Array.isArray(middleware) ? middleware : [middleware])
-        );
+    middleware(...middleware: Middleware[]) {
+        this.pendingMeta.middleware.push(...middleware.map(m => toRequestHandler(m, this.app)));
         return this;
     }
 

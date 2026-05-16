@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "composite": true,
+        "sourceMap": true,
         "verbatimModuleSyntax": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
@@ -7,7 +9,6 @@
         "module": "ESNext",
         "moduleResolution": "bundler",
         "strict": true,
-        "composite": true,
         "paths": {
             "@server/*": [
                 "./src/server/*"
@@ -15,7 +16,9 @@
             "@shared/*": [
                 "./src/shared/*"
             ]
-        }
+        },
+        "outDir": "./dist",
+        "rootDir": "./src"
     },
     "include": [
         "./src/server/**/*",

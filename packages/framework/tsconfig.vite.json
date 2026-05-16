@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+    "composite": true,
     "target": "ES2023",
     "lib": [
-      "ES2023"
+      "ES2023",
+      "DOM"
     ],
     "module": "ESNext",
     "types": [
@@ -20,7 +22,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "composite": true,
   },
   "include": [
     "./vite.config.ts"

@@ -1,5 +1,4 @@
 import { createApp, startServer } from '@server/bootstrap/app';
-
 /**
  * Main entry point for the Express server
  * Refactored to use modular middleware architecture
