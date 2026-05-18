@@ -1,11 +1,8 @@
 import { APP_VERSION } from '@server/config/app';
 import type { Middleware } from '@server/types';
 
-// Inertia shared data store
-let sharedData: Record<string, any> = {};
-
 export default (async ({ req, res, next }) => {
-    // Asset Versioning: Check X-Inertia-Version header
+    // 1. Asset Versioning: Check X-Inertia-Version header
     const requestVersion = req.headers['x-inertia-version'] as string | undefined;
     if (requestVersion && requestVersion !== APP_VERSION) {
         res.status(409);
@@ -13,16 +10,12 @@ export default (async ({ req, res, next }) => {
         return res.json({ error: 'Version mismatch', status: 409 });
     }
 
+    // 2. Inisialisasi sharedData lokal khusus untuk REQUEST INI SAJA (Mencegah State Leak)
+    res.locals.inertiaSharedData = res.locals.inertiaSharedData || {};
+
     // Helper: Lazy evaluation — eksekusi jika value adalah function
     const resolveProp = (value: any): any => {
-        if (typeof value === 'function') {
-            try {
-                return value();
-            } catch {
-                return undefined;
-            }
-        }
-        return value;
+        return typeof value === 'function' ? value() : value;
     };
 
     // Helper: Resolve semua props dengan lazy evaluation
@@ -34,17 +27,22 @@ export default (async ({ req, res, next }) => {
         return resolved;
     };
 
-    // Helper: Merge props dengan shared data + partial reload support
+    // Helper: Merge props dengan shared data, flash data, + partial reload support
     const getMergedProps = (localProps: Record<string, any>): Record<string, any> => {
-        const sessionErrors = (req.session as any)?.errors || {};
+        // Ambil data flash yang sudah diekstrak oleh Flash Middleware sebelumnya
+        const flash = res.locals.flash || { errors: {}, old: {}, success: null, message: null };
 
+        // Susun baseData dari global shared data
         const baseData: Record<string, any> = {
-            ...resolveProps(sharedData),
+            ...resolveProps(res.locals.inertiaSharedData),
         };
 
-        if (Object.keys(sessionErrors).length > 0) {
-            baseData.errors = sessionErrors;
-        }
+        // Inject errors dan flash ke data dasar Inertia secara otomatis
+        baseData.errors = flash.errors;
+        baseData.flash = {
+            success: flash.success,
+            message: flash.message,
+        };
 
         // Handle Partial Reload: X-Inertia-Partial-Data
         const partialData = req.headers['x-inertia-partial-data'] as string | undefined;
@@ -53,6 +51,7 @@ export default (async ({ req, res, next }) => {
         if (isPartialReload && partialData) {
             const requestedProps = partialData.split(',').map((s) => s.trim());
             const filtered: Record<string, any> = {};
+
             for (const key of requestedProps) {
                 if (localProps[key] !== undefined) {
                     filtered[key] = resolveProp(localProps[key]);
@@ -61,12 +60,19 @@ export default (async ({ req, res, next }) => {
                     filtered[key] = resolveProp(baseData[key]);
                 }
             }
+
+            // PENTING: Di Inertia, 'errors' harus SELALU dikirim walaupun tidak diminta di partial reload
+            // Ini agar komponen form client-side tidak kehilangan state error saat berinteraksi.
+            filtered.errors = baseData.errors;
+
             return filtered;
         }
 
+        // Gabungkan baseData (shared + flash) dengan local props dari Controller
         return { ...baseData, ...resolveProps(localProps) };
     };
 
+    // Daftarkan objek res.inertia
     res.inertia = {
         render: async (component: string, props: any) => {
             try {
@@ -90,7 +96,6 @@ export default (async ({ req, res, next }) => {
 
                 // SSR: Pre-render React components on server via vite-middleware
                 let appHtml = '';
-
                 try {
                     appHtml = (await req.vite.ssrRender(page)).body;
                 } catch (err) {
@@ -101,7 +106,7 @@ export default (async ({ req, res, next }) => {
                 res.render('app', {
                     _inertia: {
                         head: await req.vite.tags(['src/client/entry-client.tsx']),
-                        body: appHtml,  // dikonsumsi oleh tag @inertia()
+                        body: appHtml,  // dikonsumsi oleh @inertia di template engine Anda
                     }
                 });
             } catch (e: any) {
@@ -109,31 +114,53 @@ export default (async ({ req, res, next }) => {
             }
         },
 
-        // Share global data yang akan disertakan di setiap Inertia response
+        // Share global data aman per-request
         share: (key: string, value: any) => {
-            Object.assign(sharedData, { [key]: value });
+            res.locals.inertiaSharedData[key] = value;
             return res;
         },
 
         // Share beberapa global data sekaligus
         shareAll: (data: Record<string, any>) => {
-            Object.assign(sharedData, data);
+            Object.assign(res.locals.inertiaSharedData, data);
             return res;
         },
 
-        // Location redirect (hard redirect for Inertia)
+        // Location redirect (hard redirect untuk Inertia)
         location: (url: string) => {
+            if (!req.headers['x-inertia']) {
+                res.redirect(url);
+                return res;
+            }
+
             res.status(409);
             res.setHeader('X-Inertia-Location', url);
             res.json({ error: 'Inertia location redirect', status: 409 });
             return res;
         },
+        back: () => {
+            // Ambil URL asal dari header Referer, jika tidak ada fallback ke halaman utama '/'
+            const fallbackUrl = req.headers['referer'] || req.headers['referrer'] || '/';
+
+            // Pastikan URL yang diambil adalah path lokal (menghindari open redirect vulnerability)
+            let redirectUrl = '/';
+            try {
+                // Jika referer berupa full URL (http://localhost:3000/users/create), ambil path-nya saja
+                const parsedUrl = new URL(fallbackUrl as string, `${req.protocol}://${req.headers.host}`);
+                redirectUrl = parsedUrl.pathname + parsedUrl.search;
+            } catch {
+                // Jika parsing gagal, gunakan string mentah jika diawali dengan '/'
+                if (typeof fallbackUrl === 'string' && fallbackUrl.startsWith('/')) {
+                    redirectUrl = fallbackUrl;
+                }
+            }
+
+            // Set status ke 303 (See Other)
+            res.status(303);
+            res.redirect(redirectUrl);
+            return res;
+        }
     };
 
     next();
 }) as Middleware;
-
-// Export function untuk clear shared data (berguna untuk testing)
-export const clearSharedData = () => {
-    Object.keys(sharedData).forEach(key => delete sharedData[key]);
-};

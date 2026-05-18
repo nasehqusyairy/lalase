@@ -1,4 +1,4 @@
-export abstract class HttpError extends Error {
+export abstract class HttpException extends Error {
     constructor(
         message: string,
         public status: number
@@ -8,7 +8,7 @@ export abstract class HttpError extends Error {
     }
 }
 
-export class ValidationError extends HttpError {
+export class ValidationException extends HttpException {
     constructor(
         public errors: Record<string, string[]>,
         public old: Record<string, any> = {}
@@ -17,7 +17,7 @@ export class ValidationError extends HttpError {
     }
 }
 
-export class AuthorizationError extends HttpError {
+export class AuthorizationException extends HttpException {
     constructor(message = 'This action is unauthorized') {
         super(message, 403);
     }

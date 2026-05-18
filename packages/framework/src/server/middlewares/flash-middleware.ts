@@ -1,46 +1,40 @@
 import type { Middleware } from '@server/types';
 
 /**
- * Flash Middleware
+ * Flash Middleware untuk Inertia
  * 
- * Handles flash data (validation errors, old input, success/error messages)
- * for Inertia requests.
- * 
- * Features:
- * - Extracts validation errors from session and makes them available as shared data
- * - Extracts old input values for form repopulation
- * - Provides success/message flash data
+ * Aturan Flash Data:
+ * 1. Ambil data dari session request SAAT INI untuk dibagikan ke Inertia.
+ * 2. HAPUS dari session agar tidak muncul lagi di request BERIKUTNYA.
  */
 export default (({ req, res, next }) => {
-    // Initialize flash object on response
-    res.flash = {
-        errors: req.session.errors || {},
-        old: req.session.old || {},
-        success: undefined,
-        message: undefined,
+    // 1. Ekstrak data flash dari session saat ini (default ke objek kosong/undefined jika tidak ada)
+    const flashData = {
+        errors: req.session?._errors || {},
+        old: req.session?._old || {},
+        success: req.session?._success || null,
+        message: req.session?._message || null,
     };
 
-    // Get flash messages from session
-    if (req.session.success) {
-        res.flash.success = req.session.success;
-    }
-    if (req.session.message) {
-        res.flash.message = req.session.message;
-    }
+    // 2. Sediakan data ini agar bisa diakses oleh Inertia adapter Anda
+    // Anda bisa menaruhnya di res.locals atau langsung daftarkan ke shared data Inertia
+    res.locals = {
+        ...res.locals,
+        flash: flashData
+    };
 
-    // Clear session flash data after reading (but keep errors for later)
-    if (req.session.success) {
-        delete req.session.success;
-    }
-    if (req.session.message) {
-        delete req.session.message;
-    }
-    if (req.session.old) {
-        delete req.session.old;
-    }
+    // Alternatif jika framework Anda punya shared helper langsung:
+    // req.inertia.share('errors', flashData.errors);
+    // req.inertia.share('flash', { success: flashData.success, message: flashData.message });
 
-    // Note: Errors are cleared in the controller after being used
-    // This middleware just makes them available to the response
+    // 3. SEGERA BERSIHKAN SESSION (Flash Lifecycle)
+    // Setelah dipindahkan ke context request saat ini (res.locals), kita aman menghapusnya dari session
+    if (req.session) {
+        delete req.session._errors;
+        delete req.session._old;
+        delete req.session._success;
+        delete req.session._message;
+    }
 
     next();
 }) as Middleware;

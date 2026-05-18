@@ -1,4 +1,4 @@
-import { TUser } from "@shared/types"
+import { TUser } from "@shared/types/models/user"
 
 type Props = {
     users: TUser[]

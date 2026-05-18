@@ -1,6 +1,6 @@
 import type { Model } from "@lalase/oerem";
 import { createModel } from "@server/bootstrap/database";
-import type { TUser } from "@shared/types";
+import type { TUser } from "@shared/types/models/user";
 
 export default createModel('users', {
     fillable: ['name', 'email', 'password'],

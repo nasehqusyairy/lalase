@@ -14,6 +14,7 @@ import viteMiddleware from '@server/middlewares/vite-middleware';
 import edgeMiddleware from '@server/middlewares/edge-middleware';
 import viewpathMiddleware from '@server/middlewares/viewpath-middleware';
 import staticMiddleware from '@server/middlewares/static-middleware';
+import inertiaValidationHandler from '@server/error-handlers/inertia-validation-handler';
 
 export default {
     globalMiddlewares: [
@@ -40,6 +41,7 @@ export default {
     ],
 
     errorHandlers: [
+        inertiaValidationHandler,
         defaultHandler
     ],
 

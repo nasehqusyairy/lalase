@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { HttpError, ValidationError } from '@server/lib/error';
+import { HttpException, ValidationException } from '@server/lib/exception';
 import { PRODUCTION } from '@server/config/app';
 import type { ErrorHandler } from '@server/types';
 
@@ -26,9 +26,9 @@ export default (({
     /* ========================
      * Known Http Errors
      * ======================== */
-    if (err instanceof HttpError) {
+    if (err instanceof HttpException) {
         // Validation errors - return JSON with errors
-        if (err instanceof ValidationError) {
+        if (err instanceof ValidationException) {
             return res.status(err.status).json({
                 message: err.message,
                 errors: err.errors,

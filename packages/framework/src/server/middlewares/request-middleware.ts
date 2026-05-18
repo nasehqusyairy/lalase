@@ -1,81 +1,63 @@
-import { castValue } from '@shared/helpers';
-import { AuthorizationError, ValidationError } from '@server/lib/error';
+import vine, { ValidationError } from '@vinejs/vine';
+import { AuthorizationException, ValidationException } from '@server/lib/exception';
 import type { Middleware, RequestDefinition } from '@server/types';
 
-function deepTrim<T>(value: T): T {
-    if (typeof value === 'string') {
-        return value.trim() as unknown as T;
+
+function convertToValidationException(error: ValidationError, old: Record<string, any>): ValidationException {
+    const errors: Record<string, string[]> = {};
+
+    // 1. Cek apakah ini benar-type error validasi VineJS
+    // Pada raw error default VineJS, error.messages adalah Array of Objects
+    if (Array.isArray(error.messages)) {
+        for (const msg of error.messages) {
+            // VineJS menggunakan properti 'field', bukan 'name'
+            const field = msg.field || 'root';
+
+            if (!errors[field]) {
+                errors[field] = [];
+            }
+            // Mengambil string pesan error
+            errors[field].push(msg.message);
+        }
+
+        return new ValidationException(errors, old);
     }
 
-    // Hindari trimming untuk objek native Node/Browser agar casting tetap aman
-    if (value instanceof Date || value instanceof Buffer) {
-        return value;
+    // Jika error.messages ternyata sudah berbentuk objek (karena reporter lain)
+    if (error.messages && typeof error.messages === 'object') {
+        return new ValidationException(error.messages, old);
     }
 
-    if (Array.isArray(value)) {
-        return value.map(v => deepTrim(v)) as unknown as T;
-    }
-
-    if (value && typeof value === 'object') {
-        return Object.fromEntries(
-            Object.entries(value).map(([k, v]) => [k, deepTrim(v)])
-        ) as unknown as T;
-    }
-
-    return value;
+    // Fallback jika terjadi error tak terduga yang bukan format standar
+    return new ValidationException({ root: [error.message || 'Validation failed'] }, old);
 }
 
-export default (({ req, res, next }) => {
-    req.all = () => {
-        return deepTrim({
-            ...req.query,
-            ...req.body,
-            ...(req.files ? { files: req.files } : {}),
-        });
-    };
+export default (({ req, next }) => {
 
-    const input = req.all();
+    req.validate = async function <T>(data: any, { schema, authorize }: RequestDefinition<T>): Promise<T> {
 
-    // req.input<T>(key, default)
-    req.input = function <T>(key: string, defaultValue?: T): T | undefined {
-        const value = input[key];
-        return castValue(value, defaultValue);
-    };
-
-    // req.param<T>(key, default)
-    req.param = function <T>(key: string, defaultValue?: T): T | undefined {
-        const value = req.params[key];
-        return castValue(value, defaultValue);
-    };
-
-    // req.validate<T>({ authorize, schema })
-    req.validate = async function <T>({ authorize, schema }: RequestDefinition<T>) {
-        /* ========================
-         * Authorization
-         * ======================== */
+        // Check authorization first
         if (authorize) {
-            const allowed = await authorize();
-            if (!allowed) {
-                throw new AuthorizationError();
+            const isAuthorized = await authorize();
+            if (!isAuthorized) {
+                throw new AuthorizationException();
             }
         }
 
-        /* ========================
-         * Validation
-         * ======================== */
-        const result = await schema.safeParseAsync(input);
+        // Compile schema using VineJS
+        const validator = vine.create(schema);
 
-        if (!result.success) {
-            throw new ValidationError(
-                result.error.flatten().fieldErrors as Record<string, string[]>,
-                input
-            );
+        try {
+            // Validate data
+            const output = await validator.validate(data);
+
+            // Return validated data
+            return output as T;
+        } catch (error: any) {
+            // Convert VineJS errors to ValidationException
+            throw convertToValidationException(error, data);
         }
 
-        /* ========================
-         * Typed & Sanitized
-         * ======================== */
-        return result.data;
     };
 
     next();

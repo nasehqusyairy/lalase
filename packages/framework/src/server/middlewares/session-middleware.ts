@@ -1,13 +1,6 @@
-import session, { type SessionOptions } from 'express-session';
-import { APP_SECRET } from '@server/config/app';
+import session from '@server/bootstrap/session';
 import type { Middleware } from '@server/types';
 
-const options: SessionOptions = {
-    secret: APP_SECRET,
-    resave: false,
-    saveUninitialized: false,
-};
-
 export default (({ req, res, next }) => {
-    session(options)(req, res, next);
+    session(req, res, next);
 }) as Middleware;

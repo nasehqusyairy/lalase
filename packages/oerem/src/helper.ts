@@ -39,9 +39,19 @@ export function applyHidden<T extends Record<string, unknown>[]>(
 ) {
     return results.map(row => {
         const cleanRow = { ...row };
-        hidden.forEach(key => delete cleanRow[key]);
+
+        // Override toJSON agar hidden fields tidak muncul saat stringify
+        Object.defineProperty(cleanRow, "toJSON", {
+            enumerable: false,
+            value: function () {
+                const json = { ...this };
+                hidden.forEach(key => delete json[key]);
+                return json;
+            }
+        });
+
         return cleanRow;
-    }) as T
+    }) as T;
 }
 
 export function controlOutput<R extends unknown[], T extends Record<string, unknown>>(

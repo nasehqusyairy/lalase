@@ -2,9 +2,8 @@ import { type Request, type Response, type NextFunction, type Application, type 
 
 type SessionRecord = Record<string, any>;
 
-/**
- * Custom Middleware type with object destructuring parameter
- */
+export type Policy<T, U> = (ctx: { actor: T, data: U }) => boolean | Promise<boolean>;
+
 export type Middleware = (ctx: {
     app: Application;
     req: Request;
@@ -47,6 +46,7 @@ declare global {
                 share: (key: string, value: any) => Response;
                 shareAll: (data: Record<string, any>) => Response;
                 location: (url: string) => Response;
+                back: () => Response;
             };
             flash: {
                 errors?: Record<string, string[]>;
@@ -56,10 +56,7 @@ declare global {
             };
         }
         interface Request {
-            validate<T>(request: RequestDefinition<T>): Promise<T>;
-            all: () => Record<string, any>
-            input: <T>(key: string, defaultValue?: T) => T | undefined
-            param: <T>(key: string, defaultValue?: T) => T | undefined
+            validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
 
             vite: {
                 /**

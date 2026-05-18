@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec tsx --tsconfig tsconfig.server.json --env-file=.env src/server.ts",
+    "dev": "nodemon -e ts --exec tsx --tsconfig tsconfig.server.json --env-file=.env src/server.ts",
     "build": "npm run build:client && npm run build:ssr && npm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:ssr": "vite build --ssr src/client/entry-server.tsx --outDir dist/ssr",
