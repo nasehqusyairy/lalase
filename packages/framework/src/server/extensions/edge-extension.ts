@@ -1,8 +1,8 @@
 import { Edge } from 'edge.js';
-import type { Middleware } from '@server/types';
+import type { AppExtension } from '@server/types';
 import { APP_NAME } from '@server/config/app';
 
-export default (({ app, req, res, next }) => {
+export default (app => {
     app.engine(
         'edge',
         (filePath: string, options: object, callback: (err: Error | null, html?: string) => void): void => {
@@ -26,5 +26,4 @@ export default (({ app, req, res, next }) => {
 
     app.set('view engine', 'edge');
 
-    next();
-}) as Middleware
+}) as AppExtension

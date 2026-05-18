@@ -6,9 +6,6 @@ export default () => {
         password: '',
     });
 
-    console.log({ errors });
-
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post('/login');

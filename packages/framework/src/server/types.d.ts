@@ -1,4 +1,12 @@
-import { type Request, type Response, type NextFunction, type Application, type RequestHandler, type ErrorRequestHandler } from 'express';
+import express, {
+    type Express,
+    type Request,
+    type Response,
+    type NextFunction,
+    type Application,
+    type RequestHandler,
+    type ErrorRequestHandler
+} from 'express';
 
 type SessionRecord = Record<string, any>;
 
@@ -19,6 +27,8 @@ export type ErrorHandler = (ctx: {
     next: NextFunction;
 }) => void;
 
+export type AppExtension = (app: Express) => void;
+
 export type MiddlewareTransformer = (middleware: Middleware, app: Application) => RequestHandler
 export type ErrorHandlerTransformer = (errorHandler: ErrorHandler, app: Application) => ErrorRequestHandler
 
@@ -37,6 +47,7 @@ export type ViteManifest = Record<string, ViteManifestEntry>;
 declare global {
     namespace Express {
         interface Response {
+            defineProperty: (key: string, builder: (res: express.Response) => any) => void;
             inertia: {
                 render: (
                     component: string,
@@ -56,6 +67,7 @@ declare global {
             };
         }
         interface Request {
+            defineProperty: (key: string, builder: (req: express.Request) => any) => void;
             validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
 
             vite: {

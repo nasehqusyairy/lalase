@@ -1,8 +1,11 @@
 import vine, { ValidationError } from '@vinejs/vine';
 import { AuthorizationException, ValidationException } from '@server/lib/exception';
-import type { Middleware, RequestDefinition } from '@server/types';
+import type { AppExtension } from "@server/types";
+import type { RequestDefinition } from "@server/types";
 
-
+/**
+ * Convert VineJS ValidationError to ValidationException
+ */
 function convertToValidationException(error: ValidationError, old: Record<string, any>): ValidationException {
     const errors: Record<string, string[]> = {};
 
@@ -32,33 +35,35 @@ function convertToValidationException(error: ValidationError, old: Record<string
     return new ValidationException({ root: [error.message || 'Validation failed'] }, old);
 }
 
-export default (({ req, next }) => {
-
-    req.validate = async function <T>(data: any, { schema, authorize }: RequestDefinition<T>): Promise<T> {
-
-        // Check authorization first
-        if (authorize) {
-            const isAuthorized = await authorize();
-            if (!isAuthorized) {
-                throw new AuthorizationException();
+/**
+ * Request Extension - Menambahkan validate ke req
+ * 
+ * Using app.request.defineProperty to lazily add req.validate
+ */
+export default ((app) => {
+    app.request.defineProperty('validate', function (req) {
+        return async function <T>(data: any, { schema, authorize }: RequestDefinition<T>): Promise<T> {
+            // Check authorization first
+            if (authorize) {
+                const isAuthorized = await authorize();
+                if (!isAuthorized) {
+                    throw new AuthorizationException();
+                }
             }
-        }
 
-        // Compile schema using VineJS
-        const validator = vine.create(schema);
+            // Compile schema using VineJS
+            const validator = vine.create(schema);
 
-        try {
-            // Validate data
-            const output = await validator.validate(data);
+            try {
+                // Validate data
+                const output = await validator.validate(data);
 
-            // Return validated data
-            return output as T;
-        } catch (error: any) {
-            // Convert VineJS errors to ValidationException
-            throw convertToValidationException(error, data);
-        }
-
-    };
-
-    next();
-}) as Middleware;
+                // Return validated data
+                return output as T;
+            } catch (error: any) {
+                // Convert VineJS errors to ValidationException
+                throw convertToValidationException(error, data);
+            }
+        };
+    });
+}) as AppExtension;
