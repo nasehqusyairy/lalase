@@ -77,7 +77,7 @@ export type MiddlewareConfig = {
 };
 
 export type ErrorHandlerArg = {
-    err?: Error;
+    err: Error;
     req: Request;
     res: Response;
     next: NextFunction;

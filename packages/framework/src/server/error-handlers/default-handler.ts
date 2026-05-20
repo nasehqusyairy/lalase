@@ -3,16 +3,7 @@ import { HttpException, ValidationException } from '@server/lib/exception';
 import { PRODUCTION } from '@server/config/constants';
 import type { ErrorHandler } from '@server/types';
 
-export default (({
-    err,
-    req,
-    res,
-    next,
-}) => {
-    if (!err) {
-        return next();
-    }
-
+export default (({ err, res, next, }) => {
     if (res.headersSent) {
         return next(err);
     }
