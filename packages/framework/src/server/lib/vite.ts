@@ -1,10 +1,10 @@
 import fs from 'fs';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
 import type { MiddlewareArg, ViteManifest } from '@server/types';
-import { getPath } from '@server/helpers/path';
-import { VITE_ENTRY_SERVER_BUILD_PATH, VITE_ENTRY_SERVER_PATH } from '@server/config/vite';
+import { getPath } from '@server/lib/path';
+import { VITE_ENTRY_SERVER_BUILD_PATH, VITE_ENTRY_SERVER_PATH } from '@server/config/constants';
 
-type ViteConfig = Parameters<typeof createViteServer>[0];
+export type ViteConfig = Parameters<typeof createViteServer>[0];
 
 export type ViteOptions = {
     isProduction: boolean;
@@ -145,3 +145,5 @@ export class Vite {
         return this.vite.transformIndexHtml(url, rawTags);
     }
 }
+
+export const createVite = (options: ViteOptions) => new Vite(options);

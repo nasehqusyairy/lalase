@@ -1,6 +1,21 @@
-export const DB_CONNECTION = process.env.DB_CONNECTION || 'mysql2';
-export const DB_HOST = process.env.DB_HOST || 'localhost';
-export const DB_PORT = parseInt(process.env.DB_PORT || '3306');
-export const DB_USERNAME = process.env.DB_USERNAME || 'root';
-export const DB_PASSWORD = process.env.DB_PASSWORD || '';
-export const DB_NAME = process.env.DB_NAME || 'lalase';
+import { createPool } from '@lalase/oerem';
+import type { Knex } from 'knex';
+import {
+    DB_CLIENT,
+    DB_HOST,
+    DB_PORT,
+    DB_USERNAME,
+    DB_PASSWORD,
+    DB_NAME
+} from '@server/config/constants';
+
+export const { createModel, getConnection: db, transaction } = createPool({
+    client: DB_CLIENT,
+    connection: {
+        host: DB_HOST,
+        port: DB_PORT,
+        user: DB_USERNAME,
+        password: DB_PASSWORD,
+        database: DB_NAME
+    }
+} as Knex.Config);

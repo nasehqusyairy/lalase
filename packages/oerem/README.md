@@ -35,7 +35,7 @@ import { createOerem } from 'oerem';
 import { createOerem } from 'oerem';
 
 export const db = createOerem({
-  client: process.env.DB_CONNECTION || 'mysql2',
+  client: process.env.DB_CLIENT || 'mysql2',
   connection: {
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306'),

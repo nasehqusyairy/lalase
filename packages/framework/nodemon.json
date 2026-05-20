@@ -1,0 +1,9 @@
+{
+    "ext": "ts",
+    "watch": [
+        "src",
+        ".env",
+        ".env.*"
+    ],
+    "exec": "tsx --tsconfig tsconfig.server.json --env-file=.env src/server.ts"
+}

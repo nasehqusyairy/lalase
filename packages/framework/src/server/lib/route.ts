@@ -7,7 +7,7 @@ import {
     type Response
 } from 'express';
 import type { ControllerAction, Middleware } from '@server/types';
-import { toRequestHandler } from '@server/helpers/middleware';
+import { toRequestHandler } from '@server/lib/middleware';
 
 interface RouteMeta {
     prefix: string;
@@ -108,3 +108,5 @@ export class RouteBuilder {
         return this.router;
     }
 }
+
+export const createRoute = () => new RouteBuilder()

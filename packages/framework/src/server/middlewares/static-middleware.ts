@@ -1,5 +1,5 @@
-import { STATIC_PATH } from "@server/config/app";
-import { getPath } from "@server/helpers/path";
+import { STATIC_PATH } from "@server/config/constants";
+import { getPath } from "@server/lib/path";
 import type { Middleware } from "@server/types";
 import express from 'express'
 

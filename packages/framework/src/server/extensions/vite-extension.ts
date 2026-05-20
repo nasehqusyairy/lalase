@@ -1,7 +1,7 @@
 import type { AppExtension } from "@server/types";
-import vite from '@server/bootstrap/vite';
+import vite from '@server/config/vite';
 
-export default ((app) => {
+export default (app => {
     app.request.defineProperty('vite', function (req) {
         return {
             tags: async (entries: string[]) => await vite.resolveTags(req.originalUrl, entries),

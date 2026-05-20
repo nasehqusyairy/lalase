@@ -1,4 +1,4 @@
-import { APP_VERSION } from '@server/config/app';
+import { APP_VERSION } from '@server/config/constants';
 import type { Middleware } from '@server/types';
 
 export default (async ({ req, res, next }) => {

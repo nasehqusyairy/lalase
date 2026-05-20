@@ -1,9 +1,16 @@
-import { APP_SECRET } from "./app";
+import session, { type SessionOptions } from 'express-session';
+import { PRODUCTION, SESSION_HTTP_ONLY, SESSION_LIFETIME, SESSION_NAME, SESSION_RESAVE, SESSION_SAME_SITE, SESSION_SAVE_UNINITIALIZED, SESSION_SECRET } from '@server/config/constants';
+import type { RequestHandler } from 'express';
 
-export const SESSION_SECRET = process.env.SESSION_SECRET || APP_SECRET;
-export const SESSION_NAME = process.env.SESSION_NAME || 'sid';
-export const SESSION_LIFETIME = process.env.SESSION_LIFETIME || 1000 * 60 * 60 * 24;
-export const SESSION_SAME_SITE = process.env.SESSION_SAME_SITE || 'lax';
-export const SESSION_RESAVE = process.env.SESSION_RESAVE === 'true' || false;
-export const SESSION_SAVE_UNINITIALIZED = process.env.SESSION_SAVE_UNINITIALIZED === 'true' || false;
-export const SESSION_HTTP_ONLY = process.env.SESSION_HTTP_ONLY === 'true' || true;
+export default session({
+    name: SESSION_NAME,
+    secret: SESSION_SECRET,
+    resave: SESSION_RESAVE,
+    saveUninitialized: SESSION_SAVE_UNINITIALIZED,
+    cookie: {
+        httpOnly: SESSION_HTTP_ONLY,
+        secure: PRODUCTION,
+        sameSite: SESSION_SAME_SITE,
+        maxAge: SESSION_LIFETIME,
+    },
+} as SessionOptions) as RequestHandler;

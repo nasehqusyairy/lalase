@@ -3,8 +3,8 @@ import { AuthorizationException, ValidationException } from '@server/lib/excepti
 import type { AppExtension } from "@server/types";
 import type { RequestDefinition } from "@server/types";
 
-export default ((app) => {
-    app.request.defineProperty('validate', function (req) {
+export default (app => {
+    app.request.defineProperty('validate', function () {
         return async function <T>(data: any, { schema, authorize }: RequestDefinition<T>): Promise<T> {
             // Check authorization first
             if (authorize) {

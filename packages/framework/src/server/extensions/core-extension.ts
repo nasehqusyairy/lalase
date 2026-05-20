@@ -14,7 +14,7 @@ function defineProperty<T>(cachePrefix: string, obj: any, key: string, builder: 
     });
 }
 
-export default ((app) => {
+export default (app => {
     app.request.defineProperty = function (key, builder) {
         defineProperty('__cache_req_', this, key, builder)
     };

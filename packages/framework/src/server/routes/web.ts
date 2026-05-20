@@ -2,7 +2,7 @@ import aboutController from '@server/controllers/about-controller';
 import usersController from '@server/controllers/users-controller';
 import authController from '@server/controllers/auth-controller';
 import authMiddleware from '@server/middlewares/auth-middleware';
-import { createRoute } from '@server/helpers/route';
+import { createRoute } from '@server/lib/route';
 
 const route = createRoute();
 

@@ -1,6 +1,6 @@
 import { Edge } from 'edge.js';
 import type { AppExtension } from '@server/types';
-import { APP_NAME } from '@server/config/app';
+import { APP_NAME } from '@server/config/constants';
 
 export default (app => {
     app.engine(

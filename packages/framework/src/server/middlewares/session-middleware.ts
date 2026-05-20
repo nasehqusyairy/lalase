@@ -1,4 +1,4 @@
-import session from '@server/bootstrap/session';
+import session from '@server/config/session';
 import type { Middleware } from '@server/types';
 
 export default (({ req, res, next }) => session(req, res, () => {

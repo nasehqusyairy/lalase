@@ -1,4 +1,4 @@
-import { createRoute } from '@server/helpers/route';
+import { createRoute } from '@server/lib/route';
 import userModel from '@server/models/user-model';
 
 const route = createRoute();
