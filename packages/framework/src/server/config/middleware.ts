@@ -1,35 +1,24 @@
 import type { MiddlewareConfig } from '@server/types';
 import defaultHandler from '@server/error-handlers/default-handler';
-import sessionMiddleware from '@server/middlewares/session-middleware';
-import flashMiddleware from '@server/middlewares/flash-middleware';
-import inertiaMiddleware from '@server/middlewares/inertia-middleware';
-import redirectMiddleware from '@server/middlewares/redirect-middleware';
-import serveMiddleware from '@server/middlewares/serve-middleware';
-import notFoundMiddleware from '@server/middlewares/not-found-middleware';
-import jsonParserMiddleware from '@server/middlewares/json-parser-middleware';
-import urlencodedParserMiddleware from '@server/middlewares/urlencoded-parser-middleware';
-import multipartParserMiddleware from '@server/middlewares/multipart-parser-middleware';
-import staticMiddleware from '@server/middlewares/static-middleware';
 import inertiaValidationHandler from '@server/error-handlers/inertia-validation-handler';
+import core from '@server/middlewares/core-middleware';
 
 export default {
     globalMiddlewares: [
-        staticMiddleware,
-        jsonParserMiddleware,
-        urlencodedParserMiddleware,
-        multipartParserMiddleware,
+        core.staticMiddleware,
+        core.jsonParserMiddleware,
+        core.urlencodedParserMiddleware,
+        core.multipartParserMiddleware,
     ],
 
-    apiMiddlewares: [
-
-    ],
+    apiMiddlewares: [],
 
     webMiddlewares: [
-        serveMiddleware,
-        sessionMiddleware,
-        flashMiddleware,
-        inertiaMiddleware,
-        redirectMiddleware,
+        core.serveMiddleware,
+        core.sessionMiddleware,
+        core.flashMiddleware,
+        core.inertiaMiddleware,
+        core.redirectMiddleware,
     ],
 
     errorHandlers: [
@@ -37,6 +26,6 @@ export default {
         defaultHandler
     ],
 
-    notFoundHandler: notFoundMiddleware
+    notFoundHandler: core.notFoundMiddleware
 
 } as MiddlewareConfig;

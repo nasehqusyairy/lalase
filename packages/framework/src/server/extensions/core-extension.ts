@@ -1,3 +1,4 @@
+import { getPath } from "@server/lib/path";
 import type { AppExtension, PropertyBuilder } from "@server/types";
 
 function defineProperty<T>(cachePrefix: string, obj: any, key: string, builder: PropertyBuilder<T>) {
@@ -22,4 +23,6 @@ export default (app => {
     app.response.defineProperty = function (key, builder) {
         defineProperty('__cache_res_', this, key, builder)
     };
+
+    app.set('views', getPath('views'))
 }) as AppExtension
