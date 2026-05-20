@@ -26,7 +26,7 @@ export default (app => {
             } catch (error: any) {
                 const errors: Record<string, string[]> = {};
 
-                // 1. Cek apakah ini benar-type error validasi VineJS
+                // Cek apakah ini benar-type error validasi VineJS
                 // Pada raw error default VineJS, error.messages adalah Array of Objects
                 if (Array.isArray(error.messages)) {
                     for (const msg of error.messages) {

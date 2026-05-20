@@ -7,8 +7,6 @@ import { createRoute } from '@server/lib/route';
 const route = createRoute();
 
 route.get('/', async ({ res }) => {
-    // console.log(res.req);
-
     res.inertia.render('home');
 }).name('home.index');
 
@@ -16,12 +14,10 @@ route.prefix('/salam').group(() => {
     route.get('/:nama/:umur', aboutController.salam).name('about.salam')
 });
 
-// Auth routes
 route.get('/login', authController.login).name('auth.login');
 route.post('/login', authController.loginPost).name('auth.loginPost');
 route.get('/logout', authController.logout).name('auth.logout');
 
-// Protected routes
 route.prefix('/users').group(() => {
     route.middleware(authMiddleware).group(() => {
         route.get('/', usersController.index).name('users.index')

@@ -9,10 +9,6 @@ import express, {
 
 import type { createServer as createViteServer } from 'vite';
 
-// ---------------------------------------------------------------------------
-// Express augmentation
-// ---------------------------------------------------------------------------
-
 declare global {
     namespace Express {
         interface Request {
@@ -49,10 +45,6 @@ declare global {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Vite
-// ---------------------------------------------------------------------------
-
 export type ViteManifestEntry = {
     file: string;
     src?: string;
@@ -65,10 +57,6 @@ export type ViteManifestEntry = {
 
 export type ViteManifest = Record<string, ViteManifestEntry>;
 
-// ---------------------------------------------------------------------------
-// Controller
-// ---------------------------------------------------------------------------
-
 export type ControllerActionArg = {
     req: Request;
     res: Response;
@@ -78,15 +66,7 @@ export type ControllerAction = (ctx: ControllerActionArg) => Promise<void> | voi
 
 export type Controller = Record<string, ControllerAction>;
 
-// ---------------------------------------------------------------------------
-// Application
-// ---------------------------------------------------------------------------
-
 export type AppExtension = (app: Express) => void;
-
-// ---------------------------------------------------------------------------
-// Middleware config
-// ---------------------------------------------------------------------------
 
 export type MiddlewareConfig = {
     globalMiddlewares: Middleware[];
@@ -95,10 +75,6 @@ export type MiddlewareConfig = {
     errorHandlers: ErrorHandler[];
     notFoundHandler: Middleware;
 };
-
-// ---------------------------------------------------------------------------
-// Error handling
-// ---------------------------------------------------------------------------
 
 export type ErrorHandlerArg = {
     err?: Error;
@@ -111,10 +87,6 @@ export type ErrorHandler = (ctx: ErrorHandlerArg) => void;
 
 export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler;
 
-// ---------------------------------------------------------------------------
-// Middleware
-// ---------------------------------------------------------------------------
-
 export type MiddlewareArg = {
     req: Request;
     res: Response;
@@ -125,18 +97,10 @@ export type Middleware = (ctx: MiddlewareArg) => void;
 
 export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler;
 
-// ---------------------------------------------------------------------------
-// Request validation
-// ---------------------------------------------------------------------------
-
 export type RequestDefinition<T> = {
     authorize?: () => boolean | Promise<boolean>;
     schema: any;
 };
-
-// ---------------------------------------------------------------------------
-// Policy
-// ---------------------------------------------------------------------------
 
 export type PolicyArg<T, U> = {
     actor: T;
@@ -144,10 +108,6 @@ export type PolicyArg<T, U> = {
 };
 
 export type Policy<T, U> = (ctx: PolicyArg<T, U>) => boolean | Promise<boolean>;
-
-// ---------------------------------------------------------------------------
-// Vite config
-// ---------------------------------------------------------------------------
 
 export type ViteConfig = Parameters<typeof createViteServer>[0];
 
@@ -157,15 +117,7 @@ export type ViteOptions = {
     config: ViteConfig;
 };
 
-// ---------------------------------------------------------------------------
-// Utility
-// ---------------------------------------------------------------------------
-
 export type PropertyBuilder<T> = (obj: T) => any;
-
-// ---------------------------------------------------------------------------
-// Session
-// ---------------------------------------------------------------------------
 
 export type SessionRecord = Record<string, any>;
 

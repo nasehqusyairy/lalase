@@ -1,17 +1,6 @@
 import type { AppExtension } from "@server/types";
 import { Inertia } from '@server/lib/inertia';
 
-/*
-|-------------------------------------------------------------------------------------------
-| Inertia Extension - Menambahkan inertia ke res
-|
-| Fungsi:
-|   1. Menyediakan res.inertia.render() untuk render Inertia page
-|   2. Menyediakan res.inertia.share() dan shareAll() untuk shared data
-|   3. Menyediakan res.inertia.location() untuk hard redirect
-|   4. Menyediakan res.inertia.back() untuk redirect ke referer
-|-------------------------------------------------------------------------------------------
-*/
 export default (app => {
     app.response.defineProperty('inertia', function (res) {
         const req = res.req;

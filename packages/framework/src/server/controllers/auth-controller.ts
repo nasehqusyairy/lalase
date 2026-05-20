@@ -7,7 +7,6 @@ import type { LoginPayload } from "@shared/types/payloads/login";
 export default {
 
     async login({ req, res }) {
-        // If already logged in, redirect to home
         if ((req.session as any)?.user) {
             res.inertia.location('/');
             return;
@@ -16,7 +15,6 @@ export default {
     },
 
     async loginPost({ req, res }) {
-        // Validate request body using VineJS
         const { email, password } = await req.validate<LoginPayload>(req.body, {
             schema: vine.object({
                 email: vine.string().email().minLength(1),
@@ -24,7 +22,6 @@ export default {
             }),
         });
 
-        // Find user by email using query builder (password tidak di-hash karena masih uji coba)
         const user = await userModel.query(q => q.where('email', email)).first();
 
         if (!user || user.password !== password) {
@@ -33,14 +30,12 @@ export default {
             });
         }
 
-        // Set user session
         (req.session as any).user = {
             id: user.id,
             name: user.name,
             email: user.email,
         };
 
-        // Redirect ke home atau halaman yang diminta
         const redirectTo = (req.session as any).redirect_to || '/';
         delete (req.session as any).redirect_to;
 
@@ -49,7 +44,6 @@ export default {
     },
 
     async logout({ req, res }) {
-        // Clear user session
         delete (req.session as any).user;
 
         res.inertia.location('/login');

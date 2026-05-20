@@ -10,9 +10,6 @@ export class Vite {
     private vite?: ViteDevServer;
     private isProduction: boolean;
 
-    /**
-     * @param options Konfigurasi berbasis environment (Dev vs Prod)
-     */
     constructor(options: ViteOptions) {
         this.isProduction = options.isProduction;
         this.config = options.config;
@@ -29,9 +26,6 @@ export class Vite {
         next()
     }
 
-    /**
-     * Membaca manifest file (Internal / Private)
-     */
     private readViteManifest(manifest: string): ViteManifest {
         if (this.isProduction) {
             if (!fs.existsSync(manifest)) {
@@ -42,9 +36,6 @@ export class Vite {
         return {}
     }
 
-    /**
-     * Membuat tag HTML berdasarkan ekstensi file
-     */
     private generateAssetTag(file: string): string {
         if (file.endsWith('.css')) {
             return `<link rel="stylesheet" href="/${file}">`;
@@ -57,10 +48,6 @@ export class Vite {
         return '';
     }
 
-    /**
-     * Method Utama untuk dipanggil di View/Middleware.
-     * Secara otomatis mendeteksi apakah harus merender tag Dev atau Prod.
-     */
     public async resolveTags(url: string, entries: string[]) {
         if (!this.isProduction) {
             return await this.resolveDevTags(url, entries);
@@ -81,9 +68,6 @@ export class Vite {
         return mod.render(page);
     }
 
-    /**
-     * Mengurai asset tags untuk mode Production
-     */
     private resolveProdTags(entries: string[]): string {
         if (!this.manifest) return '';
 
@@ -95,7 +79,6 @@ export class Vite {
             const chunk = manifest[src];
             if (!chunk) return;
 
-            // 1. CSS dari chunk ini
             chunk.css?.forEach((cssFile) => {
                 if (!seen.has(cssFile)) {
                     seen.add(cssFile);
@@ -103,7 +86,6 @@ export class Vite {
                 }
             });
 
-            // 2. Static imports rekursif
             chunk.imports?.forEach((imported) => {
                 if (!seen.has(imported)) {
                     seen.add(imported);
@@ -111,7 +93,6 @@ export class Vite {
                 }
             });
 
-            // 3. File utama chunk
             if (!seen.has(chunk.file)) {
                 seen.add(chunk.file);
                 tags.push(this.generateAssetTag(chunk.file));
@@ -122,9 +103,6 @@ export class Vite {
         return tags.join('\n');
     }
 
-    /**
-     * Mengurai asset tags untuk mode Development
-     */
     private async resolveDevTags(url: string, entries: string[]): Promise<string> {
         if (!this.vite) {
             this.vite = await createViteServer(this.config);
