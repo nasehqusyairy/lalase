@@ -9,7 +9,6 @@ import notFoundMiddleware from '@server/middlewares/not-found-middleware';
 import jsonParserMiddleware from '@server/middlewares/json-parser-middleware';
 import urlencodedParserMiddleware from '@server/middlewares/urlencoded-parser-middleware';
 import multipartParserMiddleware from '@server/middlewares/multipart-parser-middleware';
-import viewpathMiddleware from '@server/middlewares/viewpath-middleware';
 import staticMiddleware from '@server/middlewares/static-middleware';
 import inertiaValidationHandler from '@server/error-handlers/inertia-validation-handler';
 
@@ -28,7 +27,6 @@ export default {
     webMiddlewares: [
         serveMiddleware,
         sessionMiddleware,
-        viewpathMiddleware,
         flashMiddleware,
         inertiaMiddleware,
         redirectMiddleware,

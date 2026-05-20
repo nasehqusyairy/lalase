@@ -12,16 +12,16 @@ type SessionRecord = Record<string, any>;
 
 export type Policy<T, U> = (ctx: { actor: T, data: U }) => boolean | Promise<boolean>;
 
-export type Middleware = (ctx: {
-    app: Application;
+export type MiddlewareArg = {
     req: Request;
     res: Response;
     next: NextFunction;
-}) => void;
+}
+
+export type Middleware = (ctx: MiddlewareArg) => void;
 
 export type ErrorHandler = (ctx: {
     err?: Error;
-    app: Application;
     req: Request;
     res: Response;
     next: NextFunction;
@@ -29,8 +29,8 @@ export type ErrorHandler = (ctx: {
 
 export type AppExtension = (app: Express) => void;
 
-export type MiddlewareTransformer = (middleware: Middleware, app: Application) => RequestHandler
-export type ErrorHandlerTransformer = (errorHandler: ErrorHandler, app: Application) => ErrorRequestHandler
+export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler
+export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler
 
 export type ViteManifestEntry = {
     file: string;
@@ -44,10 +44,12 @@ export type ViteManifestEntry = {
 
 export type ViteManifest = Record<string, ViteManifestEntry>;
 
+export type PropertyBuilder<T> = (obj: T) => any
+
 declare global {
     namespace Express {
         interface Response {
-            defineProperty: (key: string, builder: (res: express.Response) => any) => void;
+            defineProperty: (key: string, builder: PropertyBuilder<express.Response>) => void;
             inertia: {
                 render: (
                     component: string,
@@ -67,7 +69,7 @@ declare global {
             };
         }
         interface Request {
-            defineProperty: (key: string, builder: (req: express.Request) => any) => void;
+            defineProperty: (key: string, builder: PropertyBuilder<express.Request>) => void;
             validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
 
             vite: {

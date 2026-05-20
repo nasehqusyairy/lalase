@@ -18,7 +18,6 @@ interface RouteMeta {
 export class RouteBuilder {
     private router: Router;
     private contextStack: RouteMeta[] = [];
-    private app: Application;
 
     private pendingMeta: RouteMeta = {
         prefix: '',
@@ -35,8 +34,7 @@ export class RouteBuilder {
         };
     }
 
-    constructor(app: Application) {
-        this.app = app
+    constructor() {
         this.router = Router();
     }
 
@@ -87,7 +85,7 @@ export class RouteBuilder {
     }
 
     middleware(...middleware: Middleware[]) {
-        this.pendingMeta.middleware.push(...middleware.map(m => toRequestHandler(m, this.app)));
+        this.pendingMeta.middleware.push(...middleware.map(toRequestHandler));
         return this;
     }
 

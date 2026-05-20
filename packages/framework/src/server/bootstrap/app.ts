@@ -16,20 +16,20 @@ export function createApp(): Application {
 
     // Apply global middlewares
     for (const middleware of middlewareRegistry.globalMiddlewares) {
-        app.use(toRequestHandler(middleware, app));
+        app.use(toRequestHandler(middleware));
     }
 
     // Set up API and web routes with their respective middlewares
-    app.use('/api', ...middlewareRegistry.apiMiddlewares.map(m => toRequestHandler(m, app)), api(app));
-    app.use(...middlewareRegistry.webMiddlewares.map(m => toRequestHandler(m, app)), web(app));
+    app.use('/api', ...middlewareRegistry.apiMiddlewares.map(toRequestHandler), api);
+    app.use(...middlewareRegistry.webMiddlewares.map(toRequestHandler), web);
 
     // Apply error handlers
     for (const errorHandler of middlewareRegistry.errorHandlers) {
-        app.use(toErrorHandler(errorHandler, app));
+        app.use(toErrorHandler(errorHandler));
     }
 
     // Handle 404 Not Found
-    app.use(toRequestHandler(middlewareRegistry.notFoundHandler, app));
+    app.use(toRequestHandler(middlewareRegistry.notFoundHandler));
 
     return app;
 }

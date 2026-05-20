@@ -1,41 +1,25 @@
-import type { AppExtension } from "@server/types";
+import type { AppExtension, PropertyBuilder } from "@server/types";
+
+function defineProperty<T>(cachePrefix: string, obj: any, key: string, builder: PropertyBuilder<T>) {
+    const cacheKey = Symbol(`${cachePrefix}${key}`);
+    Object.defineProperty(obj, key, {
+        get() {
+            if (!(cacheKey in this)) {
+                this[cacheKey] = builder(this);
+            }
+            return this[cacheKey];
+        },
+        configurable: true,
+        enumerable: false
+    });
+}
 
 export default ((app) => {
-    /**
-     * 1. Tambahkan metode defineProperty ke objek app.request
-     */
-    app.request.defineProperty = function (key: string, builder: (req: any) => any) {
-        const cacheKey = Symbol(`__cache_req_${key}`);
-
-        Object.defineProperty(this, key, {
-            get() {
-                // 'this' di sini adalah objek 'req' asli milik user pada request aktif
-                if (!(cacheKey in this)) {
-                    this[cacheKey] = builder(this);
-                }
-                return this[cacheKey];
-            },
-            configurable: true,
-            enumerable: false
-        });
+    app.request.defineProperty = function (key, builder) {
+        defineProperty('__cache_req_', this, key, builder)
     };
 
-    /**
-     * 2. Tambahkan metode defineProperty ke objek app.response
-     */
-    app.response.defineProperty = function (key: string, builder: (res: any) => any) {
-        const cacheKey = Symbol(`__cache_res_${key}`);
-
-        Object.defineProperty(this, key, {
-            get() {
-                // 'this' di sini adalah objek 'res' asli milik user pada request aktif
-                if (!(cacheKey in this)) {
-                    this[cacheKey] = builder(this);
-                }
-                return this[cacheKey];
-            },
-            configurable: true,
-            enumerable: false
-        });
+    app.response.defineProperty = function (key, builder) {
+        defineProperty('__cache_res_', this, key, builder)
     };
 }) as AppExtension

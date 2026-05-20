@@ -121,9 +121,11 @@ export default ((app) => {
                     appHtml = '';
                 }
 
+                const head = await req.vite.tags(['src/client/entry-client.tsx'])
+
                 res.render('app', {
                     _inertia: {
-                        head: await req.vite.tags(['src/client/entry-client.tsx']),
+                        head,
                         body: appHtml,
                     }
                 });
