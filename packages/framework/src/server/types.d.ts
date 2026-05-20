@@ -3,34 +3,55 @@ import express, {
     type Request,
     type Response,
     type NextFunction,
-    type Application,
     type RequestHandler,
-    type ErrorRequestHandler
+    type ErrorRequestHandler,
 } from 'express';
 
-type SessionRecord = Record<string, any>;
+import type { createServer as createViteServer } from 'vite';
 
-export type Policy<T, U> = (ctx: { actor: T, data: U }) => boolean | Promise<boolean>;
+// ---------------------------------------------------------------------------
+// Express augmentation
+// ---------------------------------------------------------------------------
 
-export type MiddlewareArg = {
-    req: Request;
-    res: Response;
-    next: NextFunction;
+declare global {
+    namespace Express {
+        interface Request {
+            defineProperty: (key: string, builder: PropertyBuilder<express.Request>) => void;
+            validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
+            vite: {
+                tags(entries: string[]): Promise<string>;
+                ssrRender(page: object): Promise<{ body: string }>;
+            };
+        }
+
+        interface Response {
+            defineProperty: (key: string, builder: PropertyBuilder<express.Response>) => void;
+
+            inertia: {
+                render(
+                    component: string,
+                    props?: Record<string, any>,
+                    title?: string,
+                ): Promise<any>;
+                share(key: string, value: any): Response;
+                shareAll(data: Record<string, any>): Response;
+                location(url: string): Response;
+                back(): Response;
+            };
+
+            flash: {
+                errors?: Record<string, string[]>;
+                old?: Record<string, any>;
+                success?: string;
+                message?: string;
+            };
+        }
+    }
 }
 
-export type Middleware = (ctx: MiddlewareArg) => void;
-
-export type ErrorHandler = (ctx: {
-    err?: Error;
-    req: Request;
-    res: Response;
-    next: NextFunction;
-}) => void;
-
-export type AppExtension = (app: Express) => void;
-
-export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler
-export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler
+// ---------------------------------------------------------------------------
+// Vite
+// ---------------------------------------------------------------------------
 
 export type ViteManifestEntry = {
     file: string;
@@ -40,70 +61,32 @@ export type ViteManifestEntry = {
     imports?: string[];
     dynamicImports?: string[];
     css?: string[];
-}
+};
 
 export type ViteManifest = Record<string, ViteManifestEntry>;
 
-export type PropertyBuilder<T> = (obj: T) => any
+// ---------------------------------------------------------------------------
+// Controller
+// ---------------------------------------------------------------------------
 
-declare global {
-    namespace Express {
-        interface Response {
-            defineProperty: (key: string, builder: PropertyBuilder<express.Response>) => void;
-            inertia: {
-                render: (
-                    component: string,
-                    props?: Record<string, any>,
-                    title?: string
-                ) => Promise<any>;
-                share: (key: string, value: any) => Response;
-                shareAll: (data: Record<string, any>) => Response;
-                location: (url: string) => Response;
-                back: () => Response;
-            };
-            flash: {
-                errors?: Record<string, string[]>;
-                old?: Record<string, any>;
-                success?: string;
-                message?: string;
-            };
-        }
-        interface Request {
-            defineProperty: (key: string, builder: PropertyBuilder<express.Request>) => void;
-            validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
-
-            vite: {
-                /**
-                 * Mengembalikan HTML tags (<script>, <link>) untuk entry points yang diberikan.
-                 *
-                 * Dev        → transformIndexHtml dari ViteDevServer (HMR client otomatis)
-                 * Production → resolve dari dist/client/.vite/manifest.json secara rekursif
-                 */
-                tags(entries: string[]): Promise<string>;
-
-                /**
-                 * Menjalankan SSR render untuk page object Inertia.
-                 * Mengembalikan { body: string } — HTML hasil render React di server.
-                 *
-                 * Dev        → ssrLoadModule dari ViteDevServer (live transform)
-                 * Production → import pre-built dist/ssr/entry-server.js
-                 */
-                ssrRender(page: object): Promise<{ body: string }>;
-            };
-        }
-    }
-}
-
-declare module 'express-session' {
-    interface SessionData extends SessionRecord { }
-}
-
-export type RequestDefinition<T> = {
-    authorize?: () => boolean | Promise<boolean>;
-    schema: any;
+export type ControllerActionArg = {
+    req: Request;
+    res: Response;
 };
-export type ControllerAction = (ctx: { req: Request, res: Response }) => Promise<void> | void;
+
+export type ControllerAction = (ctx: ControllerActionArg) => Promise<void> | void;
+
 export type Controller = Record<string, ControllerAction>;
+
+// ---------------------------------------------------------------------------
+// Application
+// ---------------------------------------------------------------------------
+
+export type AppExtension = (app: Express) => void;
+
+// ---------------------------------------------------------------------------
+// Middleware config
+// ---------------------------------------------------------------------------
 
 export type MiddlewareConfig = {
     globalMiddlewares: Middleware[];
@@ -112,3 +95,89 @@ export type MiddlewareConfig = {
     errorHandlers: ErrorHandler[];
     notFoundHandler: Middleware;
 };
+
+// ---------------------------------------------------------------------------
+// Error handling
+// ---------------------------------------------------------------------------
+
+export type ErrorHandlerArg = {
+    err?: Error;
+    req: Request;
+    res: Response;
+    next: NextFunction;
+};
+
+export type ErrorHandler = (ctx: ErrorHandlerArg) => void;
+
+export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler;
+
+// ---------------------------------------------------------------------------
+// Middleware
+// ---------------------------------------------------------------------------
+
+export type MiddlewareArg = {
+    req: Request;
+    res: Response;
+    next: NextFunction;
+};
+
+export type Middleware = (ctx: MiddlewareArg) => void;
+
+export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler;
+
+// ---------------------------------------------------------------------------
+// Request validation
+// ---------------------------------------------------------------------------
+
+export type RequestDefinition<T> = {
+    authorize?: () => boolean | Promise<boolean>;
+    schema: any;
+};
+
+// ---------------------------------------------------------------------------
+// Policy
+// ---------------------------------------------------------------------------
+
+export type PolicyArg<T, U> = {
+    actor: T;
+    data: U;
+};
+
+export type Policy<T, U> = (ctx: PolicyArg<T, U>) => boolean | Promise<boolean>;
+
+// ---------------------------------------------------------------------------
+// Vite config
+// ---------------------------------------------------------------------------
+
+export type ViteConfig = Parameters<typeof createViteServer>[0];
+
+export type ViteOptions = {
+    isProduction: boolean;
+    manifest: string;
+    config: ViteConfig;
+};
+
+// ---------------------------------------------------------------------------
+// Utility
+// ---------------------------------------------------------------------------
+
+export type PropertyBuilder<T> = (obj: T) => any;
+
+// ---------------------------------------------------------------------------
+// Session
+// ---------------------------------------------------------------------------
+
+export type SessionRecord = Record<string, any>;
+
+declare module 'express-session' {
+    interface SessionData extends SessionRecord { }
+}
+
+// ---------------------------------------------------------------------------
+// Route
+// ---------------------------------------------------------------------------
+export type RouteMeta = {
+    prefix: string;
+    middleware: RequestHandler[];
+    name?: string;
+}

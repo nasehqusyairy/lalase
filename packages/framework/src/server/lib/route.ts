@@ -1,19 +1,12 @@
 import {
     Router,
-    type Application,
     type NextFunction,
     type Request,
     type RequestHandler,
     type Response
 } from 'express';
-import type { ControllerAction, Middleware } from '@server/types';
+import type { ControllerAction, Middleware, RouteMeta } from '@server/types';
 import { toRequestHandler } from '@server/lib/middleware';
-
-interface RouteMeta {
-    prefix: string;
-    middleware: RequestHandler[];
-    name?: string;
-}
 
 export class RouteBuilder {
     private router: Router;

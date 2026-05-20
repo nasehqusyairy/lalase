@@ -1,16 +1,8 @@
 import fs from 'fs';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
-import type { MiddlewareArg, ViteManifest } from '@server/types';
+import type { MiddlewareArg, ViteManifest, ViteConfig, ViteOptions } from '@server/types';
 import { getPath } from '@server/lib/path';
 import { VITE_ENTRY_SERVER_BUILD_PATH, VITE_ENTRY_SERVER_PATH } from '@server/config/constants';
-
-export type ViteConfig = Parameters<typeof createViteServer>[0];
-
-export type ViteOptions = {
-    isProduction: boolean;
-    manifest: string;
-    config: ViteConfig;
-};
 
 export class Vite {
     private manifest: ViteManifest;
