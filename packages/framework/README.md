@@ -1,73 +1,384 @@
-# React + TypeScript + Vite
+# Lalase Framework
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Lalase adalah **framework monolit berbasis Express** yang ringan dan *beginner-friendly*. Framework ini dirancang untuk kemudahan penggunaan dengan kombinasi powerful dari backend Express dan frontend React, lengkap dengan fitur-fitur modern seperti Server-Side Rendering (SSR), ORM yang powerful, dan template engine.
 
-Currently, two official plugins are available:
+## Fitur Utama
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Monolit Sederhana**: Semua dalam satu package — backend, frontend, dan database
+- **Express-based**: Menggunakan Express sebagai core server
+- **React + Vite**: Frontend modern dengan React 19 dan Vite 7
+- **SSR dengan Inertia.js**: Server-side rendering yang seamless
+- **Edge Template Engine**: Template engine powerful dari Edge.js
+- **Vine.js Validation**: Validasi data yang type-safe
+- **OERem ORM**: ORM ringan berbasis Knex.js untuk MySQL
+- **Session Management**: Built-in session handling
+- **Modular Architecture**: Middleware dan extension system yang fleksibel
 
-## React Compiler
+## Instalasi
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+```bash
+# Clone repository
+git clone <repository-url>
+cd lalase
 
-## Expanding the ESLint configuration
+# Install dependencies
+pnpm install
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Jalankan development server
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Server akan running di `http://localhost:3000`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Struktur Project
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+packages/framework/
+├── src/
+│   ├── client/           # Frontend React
+│   │   ├── entry-client.tsx
+│   │   ├── entry-server.tsx
+│   │   ├── main.css
+│   │   └── pages/        # React components/pages
+│   ├── server/          # Backend Express
+│   │   ├── config/      # Konfigurasi (app, database, middleware, dll)
+│   │   ├── controllers/ # Controller handlers
+│   │   ├── models/      # Database models
+│   │   ├── routes/      # Route definitions
+│   │   ├── middlewares/ # Custom middlewares
+│   │   ├── lib/         # Utilities (route builder, inertia, dll)
+│   │   └── extensions/  # Framework extensions
+│   └── shared/           # Shared types
+├── views/                # Edge templates
+├── public/               # Static files
+└── package.json
+```
+
+---
+
+# Tutorial
+
+## Tutorial 1: Membuat Route Baru
+
+Lalase menggunakan sistem route builder yang fluent dan modular. Route didefinisikan di folder `src/server/routes/`.
+
+### Contoh Membuat Route Sederhana
+
+```typescript
+// src/server/routes/web.ts
+import { createRoute } from '@server/lib/route';
+
+const route = createRoute();
+
+// Route dasar GET
+route.get('/about', async ({ res }) => {
+    res.inertia.render('about', { message: 'Tentang Lalase Framework' });
+}).name('about');
+
+export default route.getRouter();
+```
+
+### Route dengan Parameter
+
+```typescript
+// Route dengan parameter URL
+route.get('/users/:id', async ({ req, res }) => {
+    const userId = req.params.id;
+    res.inertia.render('users/show', { userId });
+}).name('users.show');
+```
+
+### Route dengan Prefix Group
+
+```typescript
+// Menggunakan prefix dan group
+route.prefix('/posts').group(() => {
+    route.get('/', async ({ res }) => {
+        res.inertia.render('posts/index', { posts: [] });
+    }).name('posts.index');
+    
+    route.get('/comments', async ({ res }) => {
+        res.inertia.render('posts/comments', { comments: [] });
+    }).name('posts.comments');
+});
+```
+
+---
+
+## Tutorial 2: Membuat Controller
+
+Controller menangani logika bisnis dan response. Setiap controller harus memenuhi interface `Controller`.
+
+### Contoh Membuat Controller
+
+```typescript
+// src/server/controllers/post-controller.ts
+import type { Controller } from "@server/types";
+
+export default {
+    async index({ res }) {
+        // GET /posts
+        const posts = await getPostsFromDatabase();
+        res.inertia.render('posts/index', { posts });
+    },
+
+    async show({ req, res }) {
+        // GET /posts/:id
+        const post = await getPostById(req.params.id);
+        res.inertia.render('posts/show', { post });
+    },
+
+    async store({ req, res }) {
+        // POST /posts
+        const newPost = await createPost(req.body);
+        res.inertia.render('posts/show', { post: newPost });
+    }
+
+} satisfies Controller;
+```
+
+### Menghubungkan Route dengan Controller
+
+```typescript
+// src/server/routes/web.ts
+import postController from '@server/controllers/post-controller';
+import { createRoute } from '@server/lib/route';
+
+const route = createRoute();
+
+route.get('/posts', postController.index);
+route.get('/posts/:id', postController.show);
+route.post('/posts', postController.store);
+
+export default route.getRouter();
+```
+
+### Contoh Komponen Halaman React
+
+```typescript
+// src/shared/models/types/post.ts
+export type TPost = { id: number; title: string; content: string }
+```
+
+```typescript
+// src/client/pages/posts/index.tsx
+import {TPost} from '@shared/models/types/post'
+
+type Props = { 
+    posts: TPost[]
+}
+
+export default (props:Props) => {
+    return (
+        <div>
+            <h1>Daftar Post</h1>
+            <ul>
+                {props.posts.map((post) => (
+                    <li key={post.id}>{post.title}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+```
+
+```typescript
+// src/client/pages/posts/show.tsx
+import {TPost} from '@shared/models/types/post'
+
+type Props = { 
+    posts: TPost
+}
+
+export default (props:Props) => {
+    return (
+        <article>
+            <h1>{post.title}</h1>
+            <p>{post.content}</p>
+        </article>
+    );
+}
+```
+
+---
+
+## Tutorial 3: Menggunakan Model dan Database
+
+Lalase menggunakan OERem sebagai ORM berbasis Knex.js. Model didefinisikan di `src/server/models/`.
+
+### Membuat Model
+
+```typescript
+// src/server/models/post-model.ts
+import type { Model } from "@lalase/oerem";
+import { createModel } from "@server/config/database";
+import {TPost} from '@shared/models/types/post'
+
+export default createModel('posts', {
+    // Kolom yang boleh diisi
+    fillable: ['title', 'content', 'author_id'],
+    // Kolom yang disembunyikan saat output
+    hidden: ['deleted_at'],
+}) as Model<TPost>;
+```
+
+### Menggunakan Model di Controller
+
+```typescript
+// src/server/controllers/post-controller.ts
+import postModel from "@server/models/post-model";
+import type { Controller } from "@server/types";
+
+export default {
+    async index({ res }) {
+        // Mengambil semua data
+        const posts = await postModel.all();
+        res.inertia.render('posts/index', { posts });
+    },
+
+    async show({ req, res }) {
+        // Mengambil data berdasarkan ID
+        const post = await postModel.find(req.params.id);
+        res.inertia.render('posts/show', { post });
+    },
+
+    async store({ req, res }) {
+        // Membuat data baru
+        const post = await postModel.create({
+            title: req.body.title,
+            content: req.body.content,
+            author_id: req.body.author_id
+        });
+        res.inertia.back();
+    },
+
+    async update({ req, res }) {
+        // Mengupdate data
+        const post = await postModel.update(req.params.id, {
+            title: req.body.title,
+            content: req.body.content
+        });
+        res.inertia.back();
+    },
+
+    async delete({ req, res }) {
+        // Menghapus data
+        await postModel.delete(req.params.id);
+        res.inertia.back();
+    }
+
+} satisfies Controller;
+```
+
+### Fitur Tambahan OERem
+
+```typescript
+// Eager Loading - Mengambil relasi
+const users = await userModel.with('posts').all();
+
+// Scope - Filter data
+const activeUsers = await userModel.where('status', 'active').all();
+
+// Transaction
+await transaction(async (trx) => {
+    await userModel.create({ name: 'John' }, trx);
+    await postModel.create({ title: 'Hello' }, trx);
+});
+```
+
+---
+
+## Tutorial 4: Menggunakan Middleware
+
+Lalase memiliki sistem middleware yang fleksibel — baik global maupun per-route.
+
+### Membuat Custom Middleware
+
+```typescript
+// src/server/middlewares/logger-middleware.ts
+import type { Middleware } from "@server/types";
+
+export default (({ req, res, next }) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
+}) as Middleware;
+```
+
+### Menggunakan Middleware di Route
+
+```typescript
+// src/server/routes/web.ts
+import { createRoute } from '@server/lib/route';
+import loggerMiddleware from '@server/middlewares/logger-middleware';
+
+const route = createRoute();
+
+// Middleware untuk route tertentu
+route.middleware(loggerMiddleware).group(() => {
+    route.get('/dashboard', async ({ res }) => {
+        res.inertia.render('dashboard', { message: 'Dashboard' });
+    });
+});
+
+// Atau langsung di route
+route.get('/profile', async ({ res }) => {
+    res.inertia.render('profile', { message: 'Profile' });
+}).name('profile').middleware(loggerMiddleware);
+```
+
+### Menggunakan Auth Middleware
+
+```typescript
+// src/server/routes/web.ts
+import authMiddleware from '@server/middlewares/auth-middleware';
+
+const route = createRoute();
+
+// Routes yang butuh authentication
+route.prefix('/admin').group(() => {
+    route.middleware(authMiddleware).group(() => {
+        route.get('/dashboard', async ({ res }) => {
+            res.inertia.render('admin/dashboard', { message: 'Admin Dashboard' });
+        });
+    });
+});
+```
+
+---
+
+## Konfigurasi Environment
+
+Buat file `.env` di root project:
+
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Database
+DB_CLIENT=mysql2
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password
+DB_NAME=lalase_db
+
+# Session
+SESSION_SECRET=your-super-secret-key-change-this
+```
+
+## Build dan Deploy
+
+```bash
+# Build untuk production
+pnpm build
+
+# Jalankan production server
+pnpm start
+```
+
+---
+
+## Lisensi
+
+MIT License - © 2025 Lalase Framework
