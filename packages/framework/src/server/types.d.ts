@@ -12,8 +12,8 @@ import type { createServer as createViteServer } from 'vite';
 declare global {
     namespace Express {
         interface Request {
-            defineProperty: (key: string, builder: PropertyBuilder<express.Request>) => void;
-            validate<T>(data: any, request: RequestDefinition<T>): Promise<T>;
+            defineProperty<K extends keyof Request>(key: K, builder: PropertyBuilder<express.Request, K>): void;
+            validate<T>(data: any, request: RequestDefinition): Promise<T>;
             vite: {
                 tags(entries: string[]): Promise<string>;
                 ssrRender(page: object): Promise<{ body: string }>;
@@ -21,7 +21,7 @@ declare global {
         }
 
         interface Response {
-            defineProperty: (key: string, builder: PropertyBuilder<express.Response>) => void;
+            defineProperty<K extends keyof Response>(key: K, builder: PropertyBuilder<express.Response, K>): void;
 
             inertia: {
                 render(
@@ -68,7 +68,7 @@ export type Controller = Record<string, ControllerAction>;
 
 export type AppExtension = (app: Express) => void;
 
-export type MiddlewareConfig = {
+export type MiddlewareRegistry = {
     globalMiddlewares: Middleware[];
     apiMiddlewares: Middleware[];
     webMiddlewares: Middleware[];
@@ -97,7 +97,7 @@ export type Middleware = (ctx: MiddlewareArg) => void;
 
 export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler;
 
-export type RequestDefinition<T> = {
+export type RequestDefinition = {
     authorize?: () => boolean | Promise<boolean>;
     schema: any;
 };
@@ -117,7 +117,7 @@ export type ViteOptions = {
     config: ViteConfig;
 };
 
-export type PropertyBuilder<T> = (obj: T) => any;
+export type PropertyBuilder<T, K> = (obj: T) => T[K];
 
 export type SessionRecord = Record<string, any>;
 
@@ -125,9 +125,6 @@ declare module 'express-session' {
     interface SessionData extends SessionRecord { }
 }
 
-// ---------------------------------------------------------------------------
-// Route
-// ---------------------------------------------------------------------------
 export type RouteMeta = {
     prefix: string;
     middleware: RequestHandler[];

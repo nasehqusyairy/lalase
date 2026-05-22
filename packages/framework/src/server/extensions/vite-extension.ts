@@ -4,7 +4,7 @@ import vite from '@server/config/vite';
 export default (app => {
     app.request.defineProperty('vite', function (req) {
         return {
-            tags: async (entries: string[]) => await vite.resolveTags(req.originalUrl, entries),
+            tags: async (entries) => await vite.resolveTags(req.originalUrl, entries),
             ssrRender: vite.ssrRender,
         };
     });

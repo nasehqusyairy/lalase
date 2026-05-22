@@ -57,10 +57,10 @@ export class Inertia {
     }
 
     public async render(
-        component: string,
-        props: Record<string, unknown>,
         req: Request,
-        res: Response
+        res: Response,
+        component: string,
+        props?: Record<string, unknown>,
     ): Promise<Response> {
         if (!req) {
             throw new Error('Request object not available');

@@ -7,25 +7,11 @@ export default (app => {
         const inertia = new Inertia();
 
         return {
-            render: async (component: string, props: any) => {
-                return inertia.render(component, props, req, res);
-            },
-
-            share: (key: string, value: any) => {
-                return inertia.share(key, value, res);
-            },
-
-            shareAll: (data: Record<string, any>) => {
-                return inertia.shareAll(data, res);
-            },
-
-            location: (url: string) => {
-                return inertia.location(url, req, res);
-            },
-
-            back: () => {
-                return inertia.back(req, res);
-            },
+            render: async (component, props) => await inertia.render(req, res, component, props),
+            share: (key, value) => inertia.share(key, value, res),
+            shareAll: (data) => inertia.shareAll(data, res),
+            location: (url) => inertia.location(url, req, res),
+            back: () => inertia.back(req, res),
         };
     });
 }) as AppExtension;

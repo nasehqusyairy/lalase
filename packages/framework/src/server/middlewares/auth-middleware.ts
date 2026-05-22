@@ -1,6 +1,6 @@
 import type { Middleware } from '@server/types';
 
-export default (async ({ req, res, next }) => {
+export default (({ req, res, next }) => {
     const user = (req.session as any)?.user;
 
     if (!user) {

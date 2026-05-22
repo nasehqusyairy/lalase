@@ -1,4 +1,4 @@
-import type { MiddlewareConfig } from '@server/types';
+import type { MiddlewareRegistry } from '@server/types';
 import defaultHandler from '@server/error-handlers/default-handler';
 import inertiaValidationHandler from '@server/error-handlers/inertia-validation-handler';
 import core from '@server/middlewares/core-middleware';
@@ -28,4 +28,4 @@ export default {
 
     notFoundHandler: core.notFoundMiddleware
 
-} as MiddlewareConfig;
+} as MiddlewareRegistry;

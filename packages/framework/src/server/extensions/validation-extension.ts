@@ -5,7 +5,7 @@ import type { RequestDefinition } from "@server/types";
 
 export default (app => {
     app.request.defineProperty('validate', function () {
-        return async function <T>(data: any, { schema, authorize }: RequestDefinition<T>): Promise<T> {
+        return async function (data, { schema, authorize }) {
             // Check authorization first
             if (authorize) {
                 const isAuthorized = await authorize();
@@ -22,7 +22,7 @@ export default (app => {
                 const output = await validator.validate(data);
 
                 // Return validated data
-                return output as T;
+                return output as any;
             } catch (error: any) {
                 const errors: Record<string, string[]> = {};
 

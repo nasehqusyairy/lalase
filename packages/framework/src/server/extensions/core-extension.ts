@@ -1,8 +1,8 @@
 import { getPath } from "@server/lib/path";
 import type { AppExtension, PropertyBuilder } from "@server/types";
 
-function defineProperty<T>(cachePrefix: string, obj: any, key: string, builder: PropertyBuilder<T>) {
-    const cacheKey = Symbol(`${cachePrefix}${key}`);
+function defineProperty<T, K extends keyof T>(cachePrefix: string, obj: any, key: K, builder: PropertyBuilder<T, K>) {
+    const cacheKey = Symbol(`${cachePrefix}${key as string}`);
     Object.defineProperty(obj, key, {
         get() {
             if (!(cacheKey in this)) {
