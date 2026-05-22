@@ -346,6 +346,206 @@ route.prefix('/admin').group(() => {
 
 ---
 
+## Tutorial 5: Membuat Extension
+
+Lalase memiliki sistem extension yang fleksibel untuk menambahkan fitur baru ke aplikasi. Extension bisa menambahkan property ke `req` atau `res`, middleware, atau fitur lainnya.
+
+### Anatomi Extension
+
+Extension adalah fungsi yang menerima instance Express app dan memodifikasinya:
+
+```typescript
+// src/server/extensions/my-extension.ts
+import type { AppExtension } from "@server/types";
+
+export default (app: Express) => {
+    // Tambahkan fitur di sini
+}) as AppExtension;
+```
+
+### Menambahkan Property ke Request
+
+Contoh extension yang menambahkan method `validate` ke request (seperti validation-extension.ts):
+
+```typescript
+// src/server/extensions/validation-extension.ts
+import vine from '@vinejs/vine';
+import { AuthorizationException, ValidationException } from '@server/lib/exception';
+import type { AppExtension } from "@server/types";
+import type { RequestDefinition } from "@server/types";
+
+export default (app => {
+    app.request.defineProperty('validate', function () {
+        return async function (data, { schema, authorize }) {
+            // Check authorization first
+            if (authorize) {
+                const isAuthorized = await authorize();
+                if (!isAuthorized) {
+                    throw new AuthorizationException();
+                }
+            }
+
+            // Compile schema using VineJS
+            const validator = vine.create(schema);
+
+            try {
+                // Validate data
+                const output = await validator.validate(data);
+                return output as any;
+            } catch (error: any) {
+                const errors: Record<string, string[]> = {};
+
+                if (Array.isArray(error.messages)) {
+                    for (const msg of error.messages) {
+                        const field = msg.field || 'root';
+                        if (!errors[field]) {
+                            errors[field] = [];
+                        }
+                        errors[field].push(msg.message);
+                    }
+                    throw new ValidationException(errors, data);
+                }
+
+                if (error.messages && typeof error.messages === 'object') {
+                    throw new ValidationException(error.messages, data);
+                }
+
+                throw new ValidationException({ root: [error.message || 'Validation failed'] }, data);
+            }
+        };
+    });
+}) as AppExtension;
+```
+
+Cara menggunakan di controller:
+
+```typescript
+// src/server/controllers/post-controller.ts
+import type { Controller } from "@server/types";
+
+export default {
+    async store({ req, res }) {
+        // Menggunakan method validate yang ditambahkan extension
+        const data = await req.validate(req.body, {
+            schema: {
+                title: vine.string().minLength(3).maxLength(255),
+                content: vine.string().minLength(10),
+            }
+        });
+        
+        const post = await postModel.create(data);
+        res.inertia.back();
+    }
+
+} satisfies Controller;
+```
+
+### Menambahkan Property ke Response
+
+Contoh extension yang menambahkan method ke response:
+
+```typescript
+// src/server/extensions/response-extension.ts
+import type { AppExtension } from "@server/types";
+
+export default (app => {
+    app.response.defineProperty('jsonApi', function () {
+        return function (data: any, statusCode: number = 200) {
+            this.status(statusCode).json({
+                success: statusCode >= 200 && statusCode < 400,
+                data
+            });
+            return this;
+        };
+    });
+}) as AppExtension;
+```
+
+### Menambahkan View Engine (Edge)
+
+Extension juga bisa menambahkan template engine (seperti edge-extension.ts):
+
+```typescript
+// src/server/extensions/edge-extension.ts
+import { Edge } from 'edge.js';
+import type { AppExtension } from '@server/types';
+import { APP_NAME } from '@server/config/constants';
+
+export default (app => {
+    app.engine(
+        'edge',
+        (filePath: string, options: object, callback: (err: Error | null, html?: string) => void): void => {
+            const cache: boolean = app.settings['view cache'] || false;
+            app.settings['view cache'] = cache;
+
+            const edge = new Edge({ cache });
+            edge.mount('default', app.settings.views);
+            edge.global('_title', APP_NAME);
+
+            try {
+                const html = edge.renderSync(filePath, options);
+                callback(null, html);
+            } catch (error) {
+                callback(error as any);
+            }
+        }
+    );
+
+    app.set('view engine', 'edge');
+}) as AppExtension
+```
+
+### Register Extension
+
+Extension perlu didaftarkan di config extension:
+
+```typescript
+// src/server/config/extension.ts
+import inertiaExtension from '@server/extensions/inertia-extension';
+import edgeExtension from '@server/extensions/edge-extension';
+import validationExtension from '@server/extensions/validation-extension';
+
+export const extensions = [
+    inertiaExtension,
+    edgeExtension,
+    validationExtension,
+];
+```
+
+### ⚠️ Penting: Update types.d.ts
+
+Ketika menambahkan property baru ke `req` atau `res`, wajib update `packages/framework/src/server/types.d.ts`.
+
+Contoh menambahkan property `validate` ke Request:
+
+```typescript
+// packages/framework/src/server/types.d.ts
+declare global {
+    namespace Express {
+        interface Request {
+            // ... property lain
+            validate<T>(data: any, request: RequestDefinition): Promise<T>;
+        }
+    }
+}
+```
+
+Contoh menambahkan property ke Response:
+
+```typescript
+// packages/framework/src/server/types.d.ts
+declare global {
+    namespace Express {
+        interface Response {
+            // ... property lain
+            jsonApi(data: any, statusCode?: number): Response;
+        }
+    }
+}
+```
+
+---
+
 ## Konfigurasi Environment
 
 Buat file `.env` di root project:
