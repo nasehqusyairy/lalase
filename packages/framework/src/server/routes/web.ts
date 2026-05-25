@@ -7,7 +7,7 @@ import { createRoute } from '@server/lib/route';
 const route = createRoute();
 
 route.get('/', async ({ res }) => {
-    res.inertia.render('home');
+    return res.inertia.render('home');
 }).name('home.index');
 
 route.prefix('/salam').group(() => {

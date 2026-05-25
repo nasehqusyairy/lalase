@@ -4,8 +4,7 @@ import session from '@server/config/session';
 import vite from '@server/config/vite';
 import { getPath } from '@server/lib/path';
 import type { Middleware } from '@server/types';
-import { STATIC_PATH } from '@server/config/constants';
-import { APP_VERSION } from '@server/config/constants';
+import { STATIC_PATH, APP_VERSION } from '@server/config/constants';
 
 export default {
     staticMiddleware: ({ req, res, next }) =>
@@ -81,7 +80,7 @@ export default {
                 if (status === 302) status = 303;
 
                 return originalRedirect(status, redirectUrl);
-            } as any;
+            }
         }
 
         next();

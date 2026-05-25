@@ -29,10 +29,10 @@ declare global {
                     props?: Record<string, any>,
                     title?: string,
                 ): Promise<any>;
-                share(key: string, value: any): Response;
-                shareAll(data: Record<string, any>): Response;
-                location(url: string): Response;
-                back(): Response;
+                share(key: string, value: any): express.Response;
+                shareAll(data: Record<string, any>): express.Response;
+                location(url: string): express.Response;
+                back(): express.Response;
             };
 
             flash: {
@@ -62,11 +62,11 @@ export type ControllerActionArg = {
     res: Response;
 };
 
-export type ControllerAction = (ctx: ControllerActionArg) => Promise<void> | void;
+export type ControllerAction = (ctx: ControllerActionArg) => Promise<express.Response> | express.Response;
 
 export type Controller = Record<string, ControllerAction>;
 
-export type AppExtension = (app: Express) => void;
+export type AppExtension = (app: Omit<Express, 'use'>) => void;
 
 export type MiddlewareRegistry = {
     globalMiddlewares: Middleware[];
@@ -83,7 +83,7 @@ export type ErrorHandlerArg = {
     next: NextFunction;
 };
 
-export type ErrorHandler = (ctx: ErrorHandlerArg) => void;
+export type ErrorHandler = (ctx: ErrorHandlerArg) => Promise<void> | void;
 
 export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler;
 

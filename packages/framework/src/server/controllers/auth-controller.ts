@@ -11,7 +11,7 @@ export default {
             res.inertia.location('/');
             return;
         }
-        res.inertia.render('auth/login', {});
+        return res.inertia.render('auth/login', {});
     },
 
     async loginPost({ req, res }) {
@@ -25,9 +25,10 @@ export default {
         const user = await userModel.query(q => q.where('email', email)).first();
 
         if (!user || user.password !== password) {
-            throw new ValidationException({
+            const errors = {
                 email: ['Email atau password salah']
-            });
+            }
+            throw new ValidationException(errors);
         }
 
         (req.session as any).user = {
@@ -39,14 +40,14 @@ export default {
         const redirectTo = (req.session as any).redirect_to || '/';
         delete (req.session as any).redirect_to;
 
-        res.inertia.location(redirectTo);
+        return res.inertia.location(redirectTo);
 
     },
 
     async logout({ req, res }) {
         delete (req.session as any).user;
 
-        res.inertia.location('/login');
+        return res.inertia.location('/login');
     },
 
 } satisfies Controller
