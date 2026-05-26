@@ -1,16 +1,17 @@
-import { PRODUCTION, VITE_APP_TYPE, VITE_DEV_SERVER_PORT, VITE_IS_MIDDLEWARE_MODE, VITE_MANIFEST_PATH } from "@server/config/constants";
+import { APP_DEBUG, VITE_TYPE, VITE_PORT, VITE_MIDDLEWARE, VITE_MANIFEST } from "@server/config/constants";
 import { createVite } from "@server/lib/vite";
+import type { AppType } from "vite";
 
 export default createVite({
-    isProduction: PRODUCTION,
-    manifest: VITE_MANIFEST_PATH,
+    debug: APP_DEBUG,
+    manifest: VITE_MANIFEST,
     config: {
         server: {
-            middlewareMode: VITE_IS_MIDDLEWARE_MODE,
+            middlewareMode: VITE_MIDDLEWARE,
             hmr: {
-                port: VITE_DEV_SERVER_PORT
+                port: VITE_PORT
             },
         },
-        appType: VITE_APP_TYPE,
+        appType: VITE_TYPE as AppType,
     }
 })

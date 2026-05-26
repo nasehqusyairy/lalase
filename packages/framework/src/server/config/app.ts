@@ -1,5 +1,5 @@
 import express, { type Application } from 'express';
-import { PORT } from '@server/config/constants';
+import { APP_PORT } from '@server/config/constants';
 import web from '@server/routes/web';
 import api from '@server/routes/api';
 import middlewareRegistry from './middleware';
@@ -36,8 +36,8 @@ export function createApp(): Application {
 
 export async function startServer(app: Application): Promise<void> {
     return new Promise((resolve) => {
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running at http://localhost:${PORT}`);
+        app.listen(APP_PORT, () => {
+            console.log(`🚀 Server running at http://localhost:${APP_PORT}`);
             resolve();
         });
     });

@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
-import { APP_VERSION } from '@server/config/constants';
+import { APP_NAME, APP_VERSION } from '@server/config/constants';
+import vite from '@server/config/vite';
 
 export class Inertia {
     public resolveProp(value: unknown): unknown {
@@ -62,12 +63,6 @@ export class Inertia {
         component: string,
         props?: Record<string, unknown>,
     ): Promise<Response> {
-        if (!req) {
-            throw new Error('Request object not available');
-        }
-
-        res.locals.inertiaSharedData = res.locals.inertiaSharedData || {};
-
         const url = req.originalUrl;
         const mergedProps = this.getMergedProps(props ?? {}, req, res);
 
@@ -78,6 +73,7 @@ export class Inertia {
             version: APP_VERSION,
         };
 
+        // Inertia subsequent request — kembalikan JSON saja
         if (req.headers['x-inertia']) {
             res.setHeader('X-Inertia', 'true');
             res.setHeader('Vary', 'Accept');
@@ -85,22 +81,19 @@ export class Inertia {
             return res.json(page);
         }
 
-        let appHtml = '';
+        // Initial request — SSR render full document
+        let html = '';
         try {
-            appHtml = (await req.vite.ssrRender(page)).body;
+            html = await vite.ssrRender(page);
         } catch (err) {
             console.error('SSR Error:', err);
-            appHtml = '';
         }
 
-        const head = await req.vite.tags(['src/client/entry-client.tsx']);
+        // Dev: transformIndexHtml inject HMR client dan resolve imports
+        html = await vite.transformHtml(url, html);
 
-        res.render('app', {
-            _inertia: {
-                head,
-                body: appHtml,
-            },
-        });
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
         return res;
     }
 
@@ -117,10 +110,6 @@ export class Inertia {
     }
 
     public location(url: string, req: Request, res: Response): Response {
-        if (!req) {
-            throw new Error('Request object not available');
-        }
-
         if (!req.headers['x-inertia']) {
             res.redirect(url);
             return res;
@@ -133,10 +122,6 @@ export class Inertia {
     }
 
     public back(req: Request, res: Response): Response {
-        if (!req) {
-            throw new Error('Request object not available');
-        }
-
         const fallbackUrl = req.headers['referer'] || req.headers['referrer'] || '/';
 
         let redirectUrl = '/';

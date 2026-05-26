@@ -36,8 +36,8 @@ Server akan running di `http://localhost:3000`
 packages/framework/
 ├── src/
 │   ├── client/           # Frontend React
-│   │   ├── entry-client.tsx
-│   │   ├── entry-server.tsx
+│   │   ├── app.tsx
+│   │   ├── ssr.tsx
 │   │   ├── main.css
 │   │   └── pages/        # React components/pages
 │   ├── server/          # Backend Express
@@ -552,7 +552,7 @@ Buat file `.env` di root project:
 
 ```env
 # Server
-PORT=3000
+APP_PORT=3000
 NODE_ENV=development
 
 # Database

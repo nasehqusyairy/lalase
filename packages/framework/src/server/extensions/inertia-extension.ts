@@ -14,4 +14,4 @@ export default (app => {
             back: () => inertia.back(req, res),
         };
     });
-}) as AppExtension;
+}) as AppExtension

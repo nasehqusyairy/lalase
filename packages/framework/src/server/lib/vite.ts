@@ -1,118 +1,87 @@
 import fs from 'fs';
 import { createServer as createViteServer, type ViteDevServer } from 'vite';
-import type { MiddlewareArg, ViteManifest, ViteConfig, ViteOptions } from '@server/types';
+import type { MiddlewareArg, ViteConfig, ViteManifest, ViteOptions } from '@server/types';
 import { getPath } from '@server/lib/path';
-import { VITE_ENTRY_SERVER_BUILD_PATH, VITE_ENTRY_SERVER_PATH } from '@server/config/constants';
+import { VITE_SSR, VITE_MANIFEST } from '@server/config/constants';
 
 export class Vite {
-    private manifest: ViteManifest;
     private config: ViteConfig;
     private vite?: ViteDevServer;
     private isProduction: boolean;
+    private manifest: ViteManifest;
 
     constructor(options: ViteOptions) {
-        this.isProduction = options.isProduction;
+        this.isProduction = !options.debug;
         this.config = options.config;
-        this.manifest = this.readViteManifest(getPath(options.manifest));
+        this.manifest = this.readManifest();
+    }
+
+    private readManifest(): ViteManifest {
+        if (!this.isProduction) return {};
+
+        const manifestPath = getPath(VITE_MANIFEST);
+
+        if (!fs.existsSync(manifestPath)) {
+            throw new Error(`Vite manifest not found at: ${manifestPath}. Did you run "vite build"?`);
+        }
+
+        return JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as ViteManifest;
+    }
+
+    public resolveAssets() {
+        if (!this.isProduction) {
+            return {
+                css: [],
+                scripts: ['src/client/app.tsx']
+            };
+        }
+
+        const entry = this.manifest['src/client/app.tsx'];
+
+        if (!entry) {
+            throw new Error('Entry point not found in Vite manifest.');
+        }
+
+        return {
+            css: entry.css ?? [],
+            scripts: [entry.file]
+        };
     }
 
     public async runMiddleware({ res, req, next }: MiddlewareArg) {
         if (!this.isProduction) {
             if (!this.vite) {
-                this.vite = await createViteServer(this.config)
+                this.vite = await createViteServer(this.config);
             }
             return this.vite.middlewares(req, res, next);
         }
-        next()
+        next();
     }
 
-    private readViteManifest(manifest: string): ViteManifest {
-        if (this.isProduction) {
-            if (!fs.existsSync(manifest)) {
-                throw new Error(`Vite manifest not found at: ${manifest}. Did you run "vite build"?`);
-            }
-            return JSON.parse(fs.readFileSync(manifest, 'utf-8')) as ViteManifest;
-        }
-        return {}
-    }
+    public async ssrRender(page: object): Promise<string> {
+        const assets = this.resolveAssets();
 
-    private generateAssetTag(file: string): string {
-        if (file.endsWith('.css')) {
-            return `<link rel="stylesheet" href="/${file}">`;
-        }
-
-        if (/\.(js|ts|tsx|jsx)$/.test(file)) {
-            return `<script type="module" src="/${file}"></script>`;
-        }
-
-        return '';
-    }
-
-    public async resolveTags(url: string, entries: string[]) {
-        if (!this.isProduction) {
-            return await this.resolveDevTags(url, entries);
-        }
-        return this.resolveProdTags(entries);
-    }
-
-    public async ssrRender(page: object) {
         if (!this.isProduction) {
             if (!this.vite) {
-                this.vite = await createViteServer(this.config)
+                this.vite = await createViteServer(this.config);
             }
-            const mod = await this.vite.ssrLoadModule(VITE_ENTRY_SERVER_PATH);
-            return mod.render(page);
+            const mod = await this.vite.ssrLoadModule(VITE_SSR);
+            return mod.default(page, assets);
         }
 
-        const mod = await import(getPath(VITE_ENTRY_SERVER_BUILD_PATH));
-        return mod.render(page);
+        const mod = await import(getPath(VITE_SSR));
+        return mod.default(page, assets);
     }
 
-    private resolveProdTags(entries: string[]): string {
-        if (!this.manifest) return '';
-
-        const tags: string[] = [];
-        const seen = new Set<string>();
-        const manifest = this.manifest;
-
-        const processEntry = (src: string): void => {
-            const chunk = manifest[src];
-            if (!chunk) return;
-
-            chunk.css?.forEach((cssFile) => {
-                if (!seen.has(cssFile)) {
-                    seen.add(cssFile);
-                    tags.push(`<link rel="stylesheet" href="/${cssFile}">`);
-                }
-            });
-
-            chunk.imports?.forEach((imported) => {
-                if (!seen.has(imported)) {
-                    seen.add(imported);
-                    processEntry(imported);
-                }
-            });
-
-            if (!seen.has(chunk.file)) {
-                seen.add(chunk.file);
-                tags.push(this.generateAssetTag(chunk.file));
+    public async transformHtml(url: string, html: string): Promise<string> {
+        if (!this.isProduction) {
+            if (!this.vite) {
+                this.vite = await createViteServer(this.config);
             }
-        };
+            return this.vite.transformIndexHtml(url, html);
+        }
 
-        entries.forEach(processEntry);
-        return tags.join('\n');
-    }
-
-    private async resolveDevTags(url: string, entries: string[]): Promise<string> {
-        if (!this.vite) {
-            this.vite = await createViteServer(this.config);
-        };
-
-        const rawTags = entries
-            .map((e) => `<script type="module" src="/${e}"></script>`)
-            .join('\n');
-
-        return this.vite.transformIndexHtml(url, rawTags);
+        return html;
     }
 }
 

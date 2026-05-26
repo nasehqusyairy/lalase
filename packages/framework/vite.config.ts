@@ -31,7 +31,7 @@ export default defineConfig({
   build: {
     manifest: true,
     rollupOptions: {
-      input: './src/client/entry-client.tsx',
+      input: './src/client/app.tsx',
     },
   },
 })

@@ -13,9 +13,8 @@ declare global {
     namespace Express {
         interface Request {
             defineProperty<K extends keyof Request>(key: K, builder: PropertyBuilder<express.Request, K>): void;
-            validate<T>(data: any, request: RequestDefinition): Promise<T>;
             vite: {
-                tags(entries: string[]): Promise<string>;
+                getTemplate(url: string): Promise<string>
                 ssrRender(page: object): Promise<{ body: string }>;
             };
         }
@@ -97,11 +96,6 @@ export type Middleware = (ctx: MiddlewareArg) => void;
 
 export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler;
 
-export type RequestDefinition = {
-    authorize?: () => boolean | Promise<boolean>;
-    schema: any;
-};
-
 export type PolicyArg<T, U> = {
     actor: T;
     data: U;
@@ -112,7 +106,7 @@ export type Policy<T, U> = (ctx: PolicyArg<T, U>) => boolean | Promise<boolean>;
 export type ViteConfig = Parameters<typeof createViteServer>[0];
 
 export type ViteOptions = {
-    isProduction: boolean;
+    debug: boolean;
     manifest: string;
     config: ViteConfig;
 };

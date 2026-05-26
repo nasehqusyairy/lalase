@@ -3,6 +3,7 @@ import { ValidationException } from '@server/lib/exception';
 import userModel from "@server/models/user-model";
 import type { Controller } from "@server/types";
 import type { LoginPayload } from "@shared/types/payloads/login";
+import { validate } from '@server/lib/validation';
 
 export default {
 
@@ -15,7 +16,7 @@ export default {
     },
 
     async loginPost({ req, res }) {
-        const { email, password } = await req.validate<LoginPayload>(req.body, {
+        const { email, password } = await validate<LoginPayload>(req.body, {
             schema: vine.object({
                 email: vine.string().email().minLength(1),
                 password: vine.string().minLength(3),

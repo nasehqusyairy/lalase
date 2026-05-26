@@ -4,11 +4,11 @@ import session from '@server/config/session';
 import vite from '@server/config/vite';
 import { getPath } from '@server/lib/path';
 import type { Middleware } from '@server/types';
-import { STATIC_PATH, APP_VERSION } from '@server/config/constants';
+import { APP_STATIC, APP_VERSION } from '@server/config/constants';
 
 export default {
     staticMiddleware: ({ req, res, next }) =>
-        express.static(getPath(STATIC_PATH), { index: false })(req, res, next),
+        express.static(getPath(APP_STATIC), { index: false })(req, res, next),
 
     jsonParserMiddleware: ({ req, res, next }) =>
         express.json()(req, res, next),
@@ -86,5 +86,8 @@ export default {
         next();
     },
 
-    notFoundMiddleware: ({ res }) => res.status(404).render('error', { message: 'Halaman tidak ditemukan' }),
+    notFoundMiddleware: ({ req, res }) => res.inertia.render('error', {
+        status: 404,
+        message: 'Halaman tidak ditemukan'
+    })
 } satisfies Record<string, Middleware>;

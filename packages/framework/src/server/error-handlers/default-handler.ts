@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { HttpException, ValidationException } from '@server/lib/exception';
-import { PRODUCTION } from '@server/config/constants';
+import { APP_DEBUG } from '@server/config/constants';
 import type { ErrorHandler } from '@server/types';
 
 export default (({ err, res, next, }) => {
@@ -23,7 +23,7 @@ export default (({ err, res, next, }) => {
 
     console.error('SERVER ERROR:', err);
 
-    if (PRODUCTION || !err.stack) {
+    if (!APP_DEBUG || !err.stack) {
         return res.status(500).render('error', {
             message: 'Terjadi kesalahan pada server',
         });
@@ -48,10 +48,11 @@ export default (({ err, res, next, }) => {
         }
     }
 
-    return res.status(500).render('error', {
-        message: err.message,
-        filePath,
-        lineNumber,
-        fileContent,
-    });
+    // return res.status(500).render('error', {
+    //     message: err.message,
+    //     filePath,
+    //     lineNumber,
+    //     fileContent,
+    // });
+    return res.status(500);
 }) as ErrorHandler;
