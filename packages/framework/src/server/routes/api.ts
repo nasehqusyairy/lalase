@@ -1,7 +1,7 @@
-import { createRoute } from '@server/lib/route';
 import userModel from '@server/models/user-model';
+import { RouteBuilder } from '@server/core/router';
 
-const route = createRoute();
+const route = new RouteBuilder();
 
 route.get('/', async ({ res }) => {
     return res.json({ message: 'Welcome to the API' });

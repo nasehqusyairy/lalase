@@ -5,8 +5,52 @@ import {
     type RequestHandler,
     type Response
 } from 'express';
-import type { ControllerAction, Middleware, RouteMeta } from '@server/types';
-import { toRequestHandler } from '@server/lib/middleware';
+import type {
+    ControllerAction,
+    Middleware,
+    RouteMeta
+} from '@server/types';
+
+export class RouteDefinition {
+    private middlewares: RequestHandler[] = [];
+    private routeName?: string;
+
+    constructor(
+        private router: Router,
+        private method: 'get' | 'post',
+        private path: string,
+        private handler: RequestHandler,
+        initialMeta: RouteMeta
+    ) {
+        this.middlewares = [...initialMeta.middleware];
+        this.routeName = initialMeta.name;
+
+        queueMicrotask(() => {
+            this.registerToExpress();
+        });
+    }
+
+    middleware(...middleware: Middleware[]) {
+        const expressMiddleware = middleware.map(m =>
+            ((req, res, next) => m({ req, res, next })) as RequestHandler
+        );
+        this.middlewares.push(...expressMiddleware);
+        return this;
+    }
+
+    name(name: string) {
+        this.routeName = name;
+        return this;
+    }
+
+    private registerToExpress() {
+        this.router[this.method](
+            this.path,
+            ...this.middlewares,
+            this.handler
+        );
+    }
+}
 
 export class RouteBuilder {
     private router: Router;
@@ -17,6 +61,10 @@ export class RouteBuilder {
         middleware: []
     };
 
+    constructor() {
+        this.router = Router();
+    }
+
     private handler(action: ControllerAction) {
         return (req: Request, res: Response, next: NextFunction) => {
             try {
@@ -25,10 +73,6 @@ export class RouteBuilder {
                 next(err);
             }
         };
-    }
-
-    constructor() {
-        this.router = Router();
     }
 
     private currentMeta(): RouteMeta {
@@ -48,28 +92,34 @@ export class RouteBuilder {
 
     get(path: string, action: ControllerAction) {
         const meta = this.currentMeta();
+        const fullPath = meta.prefix + path;
 
-        this.router.get(
-            meta.prefix + path,
-            ...meta.middleware.filter((m) => typeof m === 'function'),
-            this.handler(action)
+        const routeDefinition = new RouteDefinition(
+            this.router,
+            'get',
+            fullPath,
+            this.handler(action),
+            meta
         );
 
         this.resetPending();
-        return this;
+        return routeDefinition;
     }
 
     post(path: string, action: ControllerAction) {
         const meta = this.currentMeta();
+        const fullPath = meta.prefix + path;
 
-        this.router.post(
-            meta.prefix + path,
-            ...meta.middleware.filter((m) => typeof m === 'function'),
-            this.handler(action)
+        const routeDefinition = new RouteDefinition(
+            this.router,
+            'post',
+            fullPath,
+            this.handler(action),
+            meta
         );
 
         this.resetPending();
-        return this;
+        return routeDefinition;
     }
 
     prefix(prefix: string) {
@@ -78,7 +128,9 @@ export class RouteBuilder {
     }
 
     middleware(...middleware: Middleware[]) {
-        this.pendingMeta.middleware.push(...middleware.map(toRequestHandler));
+        this.pendingMeta.middleware.push(
+            ...middleware.map(m => ((req, res, next) => m({ req, res, next })) as RequestHandler)
+        );
         return this;
     }
 
@@ -101,5 +153,3 @@ export class RouteBuilder {
         return this.router;
     }
 }
-
-export const createRoute = () => new RouteBuilder()

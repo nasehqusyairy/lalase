@@ -1,3 +1,5 @@
+import type { errors as vineErrors } from '@vinejs/vine';
+import type { ValidationMessages } from '@vinejs/vine/types';
 import express, {
     type Express,
     type Request,
@@ -7,42 +9,7 @@ import express, {
     type ErrorRequestHandler,
 } from 'express';
 
-import type { createServer as createViteServer } from 'vite';
-
-declare global {
-    namespace Express {
-        interface Request {
-            defineProperty<K extends keyof Request>(key: K, builder: PropertyBuilder<express.Request, K>): void;
-            vite: {
-                getTemplate(url: string): Promise<string>
-                ssrRender(page: object): Promise<{ body: string }>;
-            };
-        }
-
-        interface Response {
-            defineProperty<K extends keyof Response>(key: K, builder: PropertyBuilder<express.Response, K>): void;
-
-            inertia: {
-                render(
-                    component: string,
-                    props?: Record<string, any>,
-                    title?: string,
-                ): Promise<any>;
-                share(key: string, value: any): express.Response;
-                shareAll(data: Record<string, any>): express.Response;
-                location(url: string): express.Response;
-                back(): express.Response;
-            };
-
-            flash: {
-                errors?: Record<string, string[]>;
-                old?: Record<string, any>;
-                success?: string;
-                message?: string;
-            };
-        }
-    }
-}
+import { createServer as createViteServer } from 'vite';
 
 export type ViteManifestEntry = {
     file: string;
@@ -82,9 +49,7 @@ export type ErrorHandlerArg = {
     next: NextFunction;
 };
 
-export type ErrorHandler = (ctx: ErrorHandlerArg) => Promise<void> | void;
-
-export type ErrorHandlerTransformer = (errorHandler: ErrorHandler) => ErrorRequestHandler;
+export type ErrorHandler = (ctx: ErrorHandlerArg) => void;
 
 export type MiddlewareArg = {
     req: Request;
@@ -93,8 +58,6 @@ export type MiddlewareArg = {
 };
 
 export type Middleware = (ctx: MiddlewareArg) => void;
-
-export type MiddlewareTransformer = (middleware: Middleware) => RequestHandler;
 
 export type PolicyArg<T, U> = {
     actor: T;
@@ -124,3 +87,5 @@ export type RouteMeta = {
     middleware: RequestHandler[];
     name?: string;
 }
+
+export type VineValidationError = Omit<InstanceType<typeof vineErrors.E_VALIDATION_ERROR>, 'messages'> & { messages: ValidationMessages[] };

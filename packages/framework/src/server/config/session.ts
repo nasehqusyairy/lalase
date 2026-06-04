@@ -1,34 +1,9 @@
-import session, { type SessionOptions } from 'express-session';
-import {
-    APP_DEBUG,
-    SESSION_HTTP_ONLY,
-    SESSION_LIFETIME,
-    SESSION_NAME,
-    SESSION_RESAVE,
-    SESSION_SAME_SITE,
-    SESSION_SAVE_UNINITIALIZED,
-    SESSION_SECRET
-} from '@server/config/constants';
-import type { RequestHandler } from 'express';
-import { ConnectSessionKnexStore } from 'connect-session-knex';
-import { db } from './database';
+import { APP_KEY } from "./app";
 
-const store = new ConnectSessionKnexStore({
-    knex: db(),
-    createTable: true,
-    cleanupInterval: SESSION_LIFETIME
-});
-
-export default session({
-    store,
-    name: SESSION_NAME,
-    secret: SESSION_SECRET,
-    resave: SESSION_RESAVE,
-    saveUninitialized: SESSION_SAVE_UNINITIALIZED,
-    cookie: {
-        httpOnly: SESSION_HTTP_ONLY,
-        secure: !APP_DEBUG,
-        sameSite: SESSION_SAME_SITE,
-        maxAge: SESSION_LIFETIME,
-    },
-} as SessionOptions) as RequestHandler
+export const SESSION_SECRET = APP_KEY;
+export const SESSION_NAME = process.env.SESSION_NAME || 'sid';
+export const SESSION_LIFETIME = parseInt(process.env.SESSION_LIFETIME!) || 1000 * 60 * 60 * 24;
+export const SESSION_SAME_SITE = process.env.SESSION_SAME_SITE || 'lax';
+export const SESSION_RESAVE = process.env.SESSION_RESAVE === 'true' || false;
+export const SESSION_SAVE_UNINITIALIZED = process.env.SESSION_SAVE_UNINITIALIZED === 'true' || false;
+export const SESSION_HTTP_ONLY = process.env.SESSION_HTTP_ONLY === 'true' || true;

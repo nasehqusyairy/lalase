@@ -1,14 +1,19 @@
 import multer from 'multer';
 import express from 'express';
-import session from '@server/config/session';
-import vite from '@server/config/vite';
-import { getPath } from '@server/lib/path';
+import session from '@server/core/session';
 import type { Middleware } from '@server/types';
-import { APP_STATIC, APP_VERSION } from '@server/config/constants';
+import { APP_STATIC, APP_VERSION } from '@server/config/app';
+import { context } from '@server/core/context';
+import { view } from '@server/core/inertia';
+import path from 'path';
+import { viteMiddleware } from '@server/core/vite';
 
 export default {
+    requestContextMiddleware: ({ req, res, next }) =>
+        context.run({ req, res }, next),
+
     staticMiddleware: ({ req, res, next }) =>
-        express.static(getPath(APP_STATIC), { index: false })(req, res, next),
+        express.static(path.resolve(APP_STATIC), { index: false })(req, res, next),
 
     jsonParserMiddleware: ({ req, res, next }) =>
         express.json()(req, res, next),
@@ -16,11 +21,11 @@ export default {
     urlencodedParserMiddleware: ({ req, res, next }) =>
         express.urlencoded({ extended: true })(req, res, next),
 
-    multipartParserMiddleware: ({ req, res, next }: any) =>
+    multipartParserMiddleware: ({ req, res, next }) =>
         multer().any()(req, res, next),
 
     serveMiddleware: async (arg) =>
-        vite.runMiddleware(arg),
+        viteMiddleware(arg),
 
     sessionMiddleware: ({ req, res, next }) =>
         session(req, res, () => {
@@ -31,23 +36,12 @@ export default {
             }
             next();
         }),
+
     flashMiddleware: ({ req, res, next }) => {
-        const flashData = {
-            errors: req.session?._errors || {},
-            old: req.session?._old || {},
-            success: req.session?._success || null,
-            message: req.session?._message || null,
-        };
-
-        res.locals = { ...res.locals, flash: flashData };
-
+        res.locals = { ...res.locals, flash: req.session.flash };
         if (req.session) {
-            delete req.session._errors;
-            delete req.session._old;
-            delete req.session._success;
-            delete req.session._message;
+            delete req.session.flash;
         }
-
         next();
     },
     inertiaMiddleware: async ({ req, res, next }) => {
@@ -86,8 +80,8 @@ export default {
         next();
     },
 
-    notFoundMiddleware: ({ req, res }) => res.inertia.render('error', {
+    notFoundMiddleware: ({ req, res }) => view('error', {
         status: 404,
         message: 'Halaman tidak ditemukan'
     })
-} satisfies Record<string, Middleware>;
+} satisfies Record<string, Middleware>

@@ -2,20 +2,28 @@ import aboutController from '@server/controllers/about-controller';
 import usersController from '@server/controllers/users-controller';
 import authController from '@server/controllers/auth-controller';
 import authMiddleware from '@server/middlewares/auth-middleware';
-import { createRoute } from '@server/lib/route';
+import { view } from '@server/core/inertia';
+import { RouteBuilder } from '@server/core/router';
+import guestMiddleware from '@server/middlewares/guest-middleware';
+import { setPermission } from '@server/core/permission';
+import { canReadUsers } from '@server/permissions/user-permission';
 
-const route = createRoute();
+const route = new RouteBuilder();
 
-route.get('/', async ({ res }) => {
-    return res.inertia.render('home');
+route.get('/', async () => {
+    setPermission({
+        readUsers: canReadUsers()
+    })
+    return view('home');
 }).name('home.index');
 
 route.prefix('/salam').group(() => {
     route.get('/:nama/:umur', aboutController.salam).name('about.salam')
 });
 
-route.get('/login', authController.login).name('auth.login');
-route.post('/login', authController.loginPost).name('auth.loginPost');
+route.get('/login', authController.index)
+    .middleware(guestMiddleware).name('auth.index')
+route.post('/login', authController.login).name('auth.login');
 route.get('/logout', authController.logout).name('auth.logout');
 
 route.prefix('/users').group(() => {

@@ -3,6 +3,6 @@ import { getAuth } from '@server/core/session';
 import type { MiddlewareArg } from '@server/types';
 
 export default ({ next }: MiddlewareArg) => {
-    if (!getAuth()?.id) return redirect('/login');
+    if (getAuth()?.id) return redirect('/');
     next();
 }

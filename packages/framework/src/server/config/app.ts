@@ -1,44 +1,6 @@
-import express, { type Application } from 'express';
-import { APP_PORT } from '@server/config/constants';
-import web from '@server/routes/web';
-import api from '@server/routes/api';
-import middlewareRegistry from './middleware';
-import extensionRegistry from './extension';
-import { toErrorHandler, toRequestHandler } from '@server/lib/middleware';
-
-export function createApp(): Application {
-    const app = express();
-
-    // Apply extensions
-    for (const extension of extensionRegistry) {
-        extension(app);
-    }
-
-    // Apply global middlewares
-    for (const middleware of middlewareRegistry.globalMiddlewares) {
-        app.use(toRequestHandler(middleware));
-    }
-
-    // Set up API and web routes with their respective middlewares
-    app.use('/api', ...middlewareRegistry.apiMiddlewares.map(toRequestHandler), api);
-    app.use(...middlewareRegistry.webMiddlewares.map(toRequestHandler), web);
-
-    // Apply error handlers
-    for (const errorHandler of middlewareRegistry.errorHandlers) {
-        app.use(toErrorHandler(errorHandler));
-    }
-
-    // Handle 404 Not Found
-    app.use(toRequestHandler(middlewareRegistry.notFoundHandler));
-
-    return app;
-}
-
-export async function startServer(app: Application): Promise<void> {
-    return new Promise((resolve) => {
-        app.listen(APP_PORT, () => {
-            console.log(`🚀 Server running at http://localhost:${APP_PORT}`);
-            resolve();
-        });
-    });
-}
+export const APP_NAME = process.env.npm_package_name || 'Lalase Framework';
+export const APP_VERSION = process.env.npm_package_version || '1.0.0';
+export const APP_KEY = process.env.APP_KEY || 'secret-key';
+export const APP_DEBUG = process.env.APP_DEBUG === 'true';
+export const APP_PORT = parseInt(process.env.APP_PORT!) || 5173;
+export const APP_STATIC = APP_DEBUG ? 'public' : 'dist/client';

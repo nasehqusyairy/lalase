@@ -1,10 +1,11 @@
+import { view } from "@server/core/inertia"
 import type { Controller } from "@server/types"
 
 export default {
-    async salam({ req, res }) {
+    salam({ req, res }) {
         const nama = req.params.nama || 'Tamu'
         const umur = req.params.umur || 'tidak diketahui'
 
-        return res.inertia.render('salam', { nama, umur })
+        return view('salam', { nama, umur })
     }
 } satisfies Controller

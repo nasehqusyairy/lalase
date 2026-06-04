@@ -72,7 +72,7 @@ const route = createRoute();
 
 // Route dasar GET
 route.get('/about', async ({ res }) => {
-    res.inertia.render('about', { message: 'Tentang Lalase Framework' });
+    inertia.render('about', { message: 'Tentang Lalase Framework' });
 }).name('about');
 
 export default route.getRouter();
@@ -84,7 +84,7 @@ export default route.getRouter();
 // Route dengan parameter URL
 route.get('/users/:id', async ({ req, res }) => {
     const userId = req.params.id;
-    res.inertia.render('users/show', { userId });
+    inertia.render('users/show', { userId });
 }).name('users.show');
 ```
 
@@ -94,11 +94,11 @@ route.get('/users/:id', async ({ req, res }) => {
 // Menggunakan prefix dan group
 route.prefix('/posts').group(() => {
     route.get('/', async ({ res }) => {
-        res.inertia.render('posts/index', { posts: [] });
+        inertia.render('posts/index', { posts: [] });
     }).name('posts.index');
     
     route.get('/comments', async ({ res }) => {
-        res.inertia.render('posts/comments', { comments: [] });
+        inertia.render('posts/comments', { comments: [] });
     }).name('posts.comments');
 });
 ```
@@ -119,19 +119,19 @@ export default {
     async index({ res }) {
         // GET /posts
         const posts = await getPostsFromDatabase();
-        res.inertia.render('posts/index', { posts });
+        inertia.render('posts/index', { posts });
     },
 
     async show({ req, res }) {
         // GET /posts/:id
         const post = await getPostById(req.params.id);
-        res.inertia.render('posts/show', { post });
+        inertia.render('posts/show', { post });
     },
 
     async store({ req, res }) {
         // POST /posts
         const newPost = await createPost(req.body);
-        res.inertia.render('posts/show', { post: newPost });
+        inertia.render('posts/show', { post: newPost });
     }
 
 } satisfies Controller;
@@ -233,13 +233,13 @@ export default {
     async index({ res }) {
         // Mengambil semua data
         const posts = await postModel.all();
-        res.inertia.render('posts/index', { posts });
+        inertia.render('posts/index', { posts });
     },
 
     async show({ req, res }) {
         // Mengambil data berdasarkan ID
         const post = await postModel.find(req.params.id);
-        res.inertia.render('posts/show', { post });
+        inertia.render('posts/show', { post });
     },
 
     async store({ req, res }) {
@@ -249,7 +249,7 @@ export default {
             content: req.body.content,
             author_id: req.body.author_id
         });
-        res.inertia.back();
+        inertia.back();
     },
 
     async update({ req, res }) {
@@ -258,13 +258,13 @@ export default {
             title: req.body.title,
             content: req.body.content
         });
-        res.inertia.back();
+        inertia.back();
     },
 
     async delete({ req, res }) {
         // Menghapus data
         await postModel.delete(req.params.id);
-        res.inertia.back();
+        inertia.back();
     }
 
 } satisfies Controller;
@@ -316,13 +316,13 @@ const route = createRoute();
 // Middleware untuk route tertentu
 route.middleware(loggerMiddleware).group(() => {
     route.get('/dashboard', async ({ res }) => {
-        res.inertia.render('dashboard', { message: 'Dashboard' });
+        inertia.render('dashboard', { message: 'Dashboard' });
     });
 });
 
 // Atau langsung di route
 route.get('/profile', async ({ res }) => {
-    res.inertia.render('profile', { message: 'Profile' });
+    inertia.render('profile', { message: 'Profile' });
 }).name('profile').middleware(loggerMiddleware);
 ```
 
@@ -338,7 +338,7 @@ const route = createRoute();
 route.prefix('/admin').group(() => {
     route.middleware(authMiddleware).group(() => {
         route.get('/dashboard', async ({ res }) => {
-            res.inertia.render('admin/dashboard', { message: 'Admin Dashboard' });
+            inertia.render('admin/dashboard', { message: 'Admin Dashboard' });
         });
     });
 });
@@ -434,7 +434,7 @@ export default {
         });
         
         const post = await postModel.create(data);
-        res.inertia.back();
+        inertia.back();
     }
 
 } satisfies Controller;

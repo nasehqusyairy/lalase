@@ -7,7 +7,7 @@ import {
     DB_USERNAME,
     DB_PASSWORD,
     DB_NAME
-} from '@server/config/constants';
+} from '@server/config/db';
 
 export const { createModel, getConnection: db, transaction } = createPool({
     client: DB_CLIENT,

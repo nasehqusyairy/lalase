@@ -1,10 +1,10 @@
-import type { MiddlewareRegistry } from '@server/types';
-import defaultHandler from '@server/error-handlers/default-handler';
-import inertiaValidationHandler from '@server/error-handlers/inertia-validation-handler';
-import core from '@server/middlewares/core-middleware';
+import validationHandler from '@server/exception/handlers/validation-handler';
+import defaultHandler from '@server/exception/handlers/default-handler';
+import core from '../core/middleware';
 
 export default {
     globalMiddlewares: [
+        core.requestContextMiddleware,
         core.staticMiddleware,
         core.jsonParserMiddleware,
         core.urlencodedParserMiddleware,
@@ -22,10 +22,9 @@ export default {
     ],
 
     errorHandlers: [
-        inertiaValidationHandler,
+        validationHandler,
         defaultHandler
     ],
 
     notFoundHandler: core.notFoundMiddleware
-
-} as MiddlewareRegistry;
+};
