@@ -21,7 +21,7 @@ function getMergedProps(localProps: Record<string, unknown>): Record<string, unk
     const sharedData: Record<string, unknown> = res.locals.inertiaSharedData || {};
 
     const baseData: Record<string, unknown> = {
-        ...resolveProps(sharedData),
+        ...sharedData,
         ...sessionData
     };
 
@@ -30,27 +30,37 @@ function getMergedProps(localProps: Record<string, unknown>): Record<string, unk
     baseData.errors = errors
     baseData.flash = flash
 
-    const partialData = req.headers['x-inertia-partial-data'] as string | undefined;
-    const isPartialReload = req.headers['x-inertia-partial'] === 'true';
+    return lazyProps({
+        ...baseData,
+        ...localProps
+    });
+}
 
-    if (isPartialReload && partialData) {
-        const requestedProps = partialData.split(',').map((s: string) => s.trim());
-        const filtered: Record<string, unknown> = {};
-
-        for (const key of requestedProps) {
-            if (localProps[key] !== undefined) {
-                filtered[key] = resolveProp(localProps[key]);
-            }
-            if (baseData[key] !== undefined) {
-                filtered[key] = resolveProp(baseData[key]);
-            }
-        }
-
-        filtered.errors = baseData.errors;
-        return filtered;
+function lazyProps<T extends Record<string, unknown>>(props: T): Partial<T> {
+    const store = context.getStore();
+    if (!store) {
+        return props;
     }
 
-    return { ...baseData, ...resolveProps(localProps) };
+    const { req } = store;
+    const isPartialReload = req.headers['x-inertia-partial'] === 'true';
+    const partialDataHeader = req.headers['x-inertia-partial-data'] as string | undefined;
+
+    if (!isPartialReload || !partialDataHeader) {
+        return resolveProps(props) as T;
+    }
+
+    const requestedProps = partialDataHeader.split(',').map((s: string) => s.trim());
+    const filtered: Record<string, unknown> = {};
+
+    for (const key of requestedProps) {
+        if (props[key] !== undefined) {
+            const value = props[key];
+            filtered[key] = resolveProp(value);
+        }
+    }
+
+    return filtered as Partial<T>;
 }
 
 export async function view(component: string, props?: Record<string, unknown>) {

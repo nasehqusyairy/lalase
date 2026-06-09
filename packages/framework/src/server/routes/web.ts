@@ -5,15 +5,10 @@ import authMiddleware from '@server/middlewares/auth-middleware';
 import { view } from '@server/core/inertia';
 import { RouteBuilder } from '@server/core/router';
 import guestMiddleware from '@server/middlewares/guest-middleware';
-import { setPermission } from '@server/core/permission';
-import { canReadUsers } from '@server/permissions/user-permission';
 
 const route = new RouteBuilder();
 
 route.get('/', async () => {
-    setPermission({
-        readUsers: canReadUsers()
-    })
     return view('home');
 }).name('home.index');
 
