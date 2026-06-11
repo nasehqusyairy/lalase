@@ -2,58 +2,25 @@ export type * from './types';
 
 import { AsyncLocalStorage } from 'async_hooks';
 import knex, { type Knex } from "knex";
-import type {
-    ModelOptions,
-    Model,
-} from "./types";
-import { ModelRegistry } from './registry';
 
-import { coreMethods } from './model-methods';
-import type { ModelContext } from './context';
+import { OeremModel, createModel } from './model';
 
 export { hasMany, hasOne, belongsTo, belongsToMany } from './helper';
 
-/**
- * Model Factory - Creates model instances that use shared coreMethods
- * Each instance only stores its own context (tableName, options, getConnection)
- * Methods are bound references to coreMethods with context attached
- */
-const model = (getConnection: () => Knex) => <T extends Record<string, unknown>, U extends Record<string, unknown> = {}>(tableName: string, options: Partial<ModelOptions<T, U>> = {}): Model<T, U> => {
-    const ctx: ModelContext = {
-        tableName,
-        options: options as unknown as Record<string, unknown>,
-        getConnection,
-        pk: (options.primaryKey || 'id') as string,
-        deletedAt: (options.deletedAtColumn || 'deleted_at') as string
-    };
-
-    const instance: Model<T, U> = {
-        tableName,
-        with: coreMethods.with.bind(null, ctx) as any,
-        query: coreMethods.query.bind(null, ctx) as any,
-        all: coreMethods.all.bind(null, ctx) as any,
-        find: coreMethods.find.bind(null, ctx) as any,
-        withTrashed: coreMethods.withTrashed.bind(null, ctx) as any,
-        onlyTrashed: coreMethods.onlyTrashed.bind(null, ctx) as any,
-        create: coreMethods.create.bind(null, ctx) as any,
-        insert: coreMethods.insert.bind(null, ctx) as any,
-        update: coreMethods.update.bind(null, ctx) as any,
-        delete: coreMethods.delete.bind(null, ctx) as any,
-        softDelete: coreMethods.softDelete.bind(null, ctx) as any
-    };
-
-    ModelRegistry.register(tableName, instance as unknown as Model<Record<string, unknown>, Record<string, unknown>>);
-
-    return instance;
-};
+// Re-export Model class for OOP access
+export { OeremModel } from './model';
 
 /**
  * Create Pool - Initialize database connection and return pool instance
+ * Maintains backward compatibility while using OOP-based Model class internally
  */
 export function createPool(config: Knex.Config) {
     const connection = knex(config);
     const trxStore = new AsyncLocalStorage<Knex.Transaction>();
     const getConnection = () => trxStore.getStore() || connection;
+
+    // Use the OOP-based createModel factory
+    const modelFactory = createModel(getConnection);
 
     return {
         getConnection,
@@ -62,7 +29,7 @@ export function createPool(config: Knex.Config) {
                 return await trxStore.run(trx, callback);
             })
         },
-        createModel: model(getConnection),
+        createModel: modelFactory,
     };
 }
 

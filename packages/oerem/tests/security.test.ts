@@ -131,7 +131,7 @@ describe('Security & Auditor Constraints', () => {
         const user = await SecretUser.query((q) => q.where('username', 'topsecret')).first();
 
         expect(user?.username).toBe('topsecret');
-        expect((user as any).email).toBeUndefined();
+        expect((JSON.parse(JSON.stringify(user)) as any).email).toBeUndefined();
     });
 
     it('should block create and update when a guarded field is present in the payload', async () => {

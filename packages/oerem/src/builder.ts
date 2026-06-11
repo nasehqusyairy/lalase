@@ -7,107 +7,147 @@ import type { SelectBuilder } from "./select-builder";
 import type { ModelContext } from "./context";
 
 /**
- * Shared Builder Creation
- * Creates fresh state per query (withRelations, currentQuery, softDeleteMode)
- * but uses the shared ModelContext to avoid recreating method logic
+ * Builder Class - OOP wrapper for query builder
+ * Stores state as class properties instead of closure variables
  */
-export const createBuilder = (
-    ctx: ModelContext,
-    queryInstance: Knex.QueryBuilder<Record<string, unknown>, unknown[]>
-): Builder<Record<string, unknown>, Record<string, unknown>> => {
-    let withRelations: (WithInput<Record<string, unknown>> | string)[] = [];
-    let currentQuery = queryInstance;
-    let softDeleteMode: SoftDeleteMode = 'active';
+export class OeremBuilder<T extends Record<string, unknown> = Record<string, unknown>, U extends Record<string, unknown> = {}> implements Builder<T, U> {
+    private withRelations: (WithInput<Record<string, unknown>> | string)[] = [];
+    private currentQuery: Knex.QueryBuilder<Record<string, unknown>, unknown[]>;
+    private softDeleteMode: SoftDeleteMode = 'active';
+    private readonly ctx: ModelContext;
 
-    return {
-        withTrashed() {
-            softDeleteMode = 'with';
-            return this;
-        },
+    constructor(
+        ctx: ModelContext,
+        queryInstance: Knex.QueryBuilder<Record<string, unknown>, unknown[]>
+    ) {
+        this.ctx = ctx;
+        this.currentQuery = queryInstance;
+    }
 
-        onlyTrashed() {
-            softDeleteMode = 'only';
-            return this;
-        },
+    /**
+     * Include soft-deleted records in results
+     */
+    withTrashed(): this {
+        this.softDeleteMode = 'with';
+        return this;
+    }
 
-        with(...args: (WithInput<Record<string, unknown>> | string)[]) {
-            withRelations.push(...args);
-            return this;
-        },
+    /**
+     * Get only soft-deleted records
+     */
+    onlyTrashed(): this {
+        this.softDeleteMode = 'only';
+        return this;
+    }
 
-        query(callback: (q: SelectBuilder<Record<string, unknown>>) => SelectBuilder<Record<string, unknown>>) {
-            callback(currentQuery as unknown as SelectBuilder<Record<string, unknown>>);
-            return this;
-        },
+    /**
+     * Add eager loading relations
+     */
+    with(...args: (WithInput<Record<string, unknown>> | string)[]): this {
+        this.withRelations.push(...args);
+        return this;
+    }
 
-        toSQL() {
-            return currentQuery.toSQL();
-        },
+    /**
+     * Apply a custom query callback
+     */
+    query(callback: (q: SelectBuilder<T>) => SelectBuilder<T>): this {
+        callback(this.currentQuery as unknown as SelectBuilder<T>);
+        return this;
+    }
 
-        async get<R = Record<string, unknown>>(): Promise<(R & Wrapper<Record<string, unknown>>)[]> {
-            return await executeGet<R, Record<string, unknown>>(
-                currentQuery,
-                ctx.options as any,
-                ctx.tableName,
-                ctx.deletedAt,
-                softDeleteMode,
-                withRelations as WithInput[],
-                ctx.getConnection
-            ) as any;
-        },
+    /**
+     * Get SQL query representation
+     */
+    toSQL() {
+        return this.currentQuery.toSQL();
+    }
 
-        async first<R = Record<string, unknown>>(): Promise<R | undefined> {
-            if (ctx.options.softDelete) {
-                currentQuery.whereNull(ctx.deletedAt);
-            }
-            const results = await this.get<R[]>();
-            return controlOutput([results[0]], ctx.options as any)[0] as R | undefined;
-        },
+    /**
+     * Execute query and get all results
+     */
+    async get<R = Record<string, unknown>>(): Promise<(R & Wrapper<Record<string, unknown>>)[]> {
+        return await executeGet<R, Record<string, unknown>>(
+            this.currentQuery,
+            this.ctx.options as any,
+            this.ctx.tableName,
+            this.ctx.deletedAt,
+            this.softDeleteMode,
+            this.withRelations as WithInput[],
+            this.ctx.getConnection
+        ) as any;
+    }
 
-        async create(data: any): Promise<any> {
-            const filtered = applySecurity(data, ctx.options as any);
+    /**
+     * Get first result
+     */
+    async first<R = Record<string, unknown>>(): Promise<R | undefined> {
+        if (this.ctx.options.softDelete) {
+            this.currentQuery.whereNull(this.ctx.deletedAt);
+        }
+        const results = await this.get<R[]>();
+        return controlOutput([results[0]], this.ctx.options as any)[0] as R | undefined;
+    }
+
+    /**
+     * Create a new record
+     */
+    async create(data: any): Promise<any> {
+        const filtered = applySecurity(data, this.ctx.options as any);
+        const payload = { ...filtered } as Record<string, unknown>;
+        if (this.ctx.options.timestamps !== false) {
+            const now = this.ctx.getConnection().fn.now();
+            payload.created_at = payload.created_at || now;
+            payload.updated_at = payload.updated_at || now;
+        }
+        const [insertedId] = await this.ctx.getConnection()(this.ctx.tableName).insert(payload);
+        const pkKey = this.ctx.pk as keyof Record<string, unknown>;
+        const results = [{ [pkKey]: (data as Record<string, unknown>)[pkKey] || insertedId, ...payload }];
+        wrapOutput(results, this.ctx.options as any, this.ctx.getConnection);
+        return results[0];
+    }
+
+    /**
+     * Update all records matching query
+     */
+    async update(data: any) {
+        const filtered = applySecurity(data, this.ctx.options as any);
+        const payload = { ...filtered } as Record<string, unknown>;
+        if (this.ctx.options.timestamps !== false) {
+            payload.updated_at = payload.updated_at || this.ctx.getConnection().fn.now();
+        }
+        return this.currentQuery.update(payload as never);
+    }
+
+    /**
+     * Insert multiple records
+     */
+    async insert(records: any[]): Promise<void> {
+        const payloads = records.map(data => {
+            const filtered = applySecurity(data, this.ctx.options as any);
             const payload = { ...filtered } as Record<string, unknown>;
-            if (ctx.options.timestamps !== false) {
-                const now = ctx.getConnection().fn.now();
+            if (this.ctx.options.timestamps !== false) {
+                const now = this.ctx.getConnection().fn.now();
                 payload.created_at = payload.created_at || now;
                 payload.updated_at = payload.updated_at || now;
             }
-            const [insertedId] = await ctx.getConnection()(ctx.tableName).insert(payload);
-            const pkKey = ctx.pk as keyof Record<string, unknown>;
-            const results = [{ [pkKey]: (data as Record<string, unknown>)[pkKey] || insertedId, ...payload }];
-            wrapOutput(results, ctx.options as any, ctx.getConnection);
-            return results[0];
-        },
+            return payload;
+        });
+        await this.ctx.getConnection()(this.ctx.tableName).insert(payloads);
+    }
 
-        async update(data: any) {
-            const filtered = applySecurity(data, ctx.options as any);
-            const payload = { ...filtered } as Record<string, unknown>;
-            if (ctx.options.timestamps !== false) {
-                payload.updated_at = payload.updated_at || ctx.getConnection().fn.now();
-            }
-            return currentQuery.update(payload as never);
-        },
+    /**
+     * Delete all records matching query
+     */
+    async delete() {
+        return this.currentQuery.del() as any;
+    }
 
-        async insert(records: any[]): Promise<void> {
-            const payloads = records.map(data => {
-                const filtered = applySecurity(data, ctx.options as any);
-                const payload = { ...filtered } as Record<string, unknown>;
-                if (ctx.options.timestamps !== false) {
-                    const now = ctx.getConnection().fn.now();
-                    payload.created_at = payload.created_at || now;
-                    payload.updated_at = payload.updated_at || now;
-                }
-                return payload;
-            });
-            await ctx.getConnection()(ctx.tableName).insert(payloads);
-        },
-
-        async delete() {
-            return currentQuery.del() as any;
-        },
-        async softDelete() {
-            if (!ctx.options.softDelete) throw new Error("Soft delete disabled");
-            return currentQuery.update({ [ctx.deletedAt]: ctx.getConnection().fn.now() } as never) as any;
-        }
-    };
-};
+    /**
+     * Soft delete all records matching query
+     */
+    async softDelete() {
+        if (!this.ctx.options.softDelete) throw new Error("Soft delete disabled");
+        return this.currentQuery.update({ [this.ctx.deletedAt]: this.ctx.getConnection().fn.now() } as never) as any;
+    }
+}
