@@ -1,11 +1,6 @@
 import type { Knex } from "knex";
-import type {
-    ModelOptions,
-    Model,
-    Builder,
-    WithInput,
-    Wrapper,
-} from "./types";
+import type { Model } from "../types/relations";
+import type { ModelOptions, WithInput, Wrapper } from "../types/models";
 import type { ModelContext } from "./context";
 import { ModelRegistry } from "./registry";
 import { OeremBuilder } from "./builder";
@@ -36,23 +31,23 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
     /**
      * Create a new Builder for this model with eager loading
      */
-    with(...args: (WithInput<U> | string)[]): Builder<T, U> {
+    with(...args: (WithInput<U> | string)[]): any {
         const builder = new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         );
-        return builder.with(...args) as any as Builder<T, U>;
+        return builder.with(...args);
     }
 
     /**
      * Apply a custom query callback to the builder
      */
-    query(callback: (q: any) => any): Builder<T, U> {
+    query(callback: (q: any) => any): any {
         const builder = new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         );
-        return builder.query(callback) as any as Builder<T, U>;
+        return builder.query(callback);
     }
 
     /**
@@ -62,7 +57,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
         return new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
-        ).get() as any as Promise<(T & U & Wrapper<U>)[]>;
+        ).get() as any;
     }
 
     /**
@@ -74,29 +69,29 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         )
             .query((q: any) => q.where(this.context.pk, id))
-            .first() as any as Promise<(T & U & Wrapper<U>) | undefined>;
+            .first() as any;
     }
 
     /**
      * Include soft-deleted records
      */
-    withTrashed(): Builder<T, U> {
+    withTrashed(): any {
         const builder = new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         );
-        return builder.withTrashed() as any as Builder<T, U>;
+        return builder.withTrashed();
     }
 
     /**
      * Get only soft-deleted records
      */
-    onlyTrashed(): Builder<T, U> {
+    onlyTrashed(): any {
         const builder = new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         );
-        return builder.onlyTrashed() as any as Builder<T, U>;
+        return builder.onlyTrashed();
     }
 
     /**
@@ -106,7 +101,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
         return new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
-        ).create(data) as any as Promise<T & Wrapper<U>>;
+        ).create(data) as any;
     }
 
     /**
@@ -116,7 +111,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
         return new OeremBuilder(
             this.context,
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
-        ).insert(records) as any as Promise<void>;
+        ).insert(records) as any;
     }
 
     /**
@@ -128,7 +123,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         )
             .query((q: any) => q.where(this.context.pk, id))
-            .update(data) as any as Promise<number>;
+            .update(data) as any;
     }
 
     /**
@@ -140,7 +135,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         )
             .query((q: any) => q.where(this.context.pk, id))
-            .delete() as any as Promise<number>;
+            .delete() as any;
     }
 
     /**
@@ -152,7 +147,7 @@ export class OeremModel<T extends Record<string, unknown>, U extends Record<stri
             this.context.getConnection()<Record<string, unknown>>(this.tableName)
         )
             .query((q: any) => q.where(this.context.pk, id))
-            .softDelete() as any as Promise<number>;
+            .softDelete() as any;
     }
 }
 

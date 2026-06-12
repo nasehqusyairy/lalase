@@ -199,5 +199,3 @@ export class RelationHandler {
 export const createRelationHandler = (getConnection: () => Knex, parentId: any, relConfig: any) => {
     return new RelationHandler(getConnection, parentId, relConfig);
 };
-
-export type { RelationConfig, BelongsToMany, ModelOptions } from "./types";

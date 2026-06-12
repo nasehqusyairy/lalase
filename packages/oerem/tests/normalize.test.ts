@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { normalizeWith } from '../src/executor';
+import { normalizeWith } from '../src/utils/normalizer';
 
 // Mock Builder sederhana untuk melacak pemanggilan method
 class MockBuilder {

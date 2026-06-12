@@ -1,5 +1,5 @@
 import type { Knex } from "knex";
-import type { ModelOptions, SoftDeleteMode } from "./types";
+import type { ModelOptions, SoftDeleteMode } from "../types/models";
 
 /**
  * Terapkan soft-delete global scope pada Knex QueryBuilder.
@@ -32,4 +32,3 @@ export function applySoftDeleteScope<T extends Record<string, unknown>, U extend
         currentQuery.whereNotNull(column);
     }
 }
-

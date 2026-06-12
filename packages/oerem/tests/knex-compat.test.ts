@@ -54,7 +54,7 @@ describe('Knex Native Features Compatibility', () => {
     it('should support whereRaw() with bound parameters', async () => {
         const results = await ctx.User.query((q) =>
             q.whereRaw('LOWER(username) = ?', ['ghozali']).orderBy('id', 'desc')
-        ).get();
+        ).get<{ username: string }>();
 
         expect(results.length).toBeGreaterThan(0);
         expect(results[0].username.toLowerCase()).toBe('ghozali');

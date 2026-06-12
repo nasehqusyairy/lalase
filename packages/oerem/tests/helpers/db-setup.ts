@@ -5,7 +5,7 @@ import {
     type SoftDeleteColumn,
     type TimeStampColumns,
 } from '../../src/index';
-import { belongsTo, belongsToMany, hasMany } from '../../src/helper';
+import { belongsTo, belongsToMany, hasMany } from '../../src/relations';
 import knex, { type Knex } from 'knex';
 
 // ─── Domain Types ─────────────────────────────────────────────────────────────

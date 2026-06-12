@@ -1,9 +1,10 @@
 import type { Knex } from "knex";
 import { executeGet } from "./executor";
-import { wrapOutput } from "./wrap-output";
-import type { Builder, SoftDeleteMode, WithInput, Wrapper } from "./types";
-import { applySecurity, controlOutput } from "./helper";
-import type { SelectBuilder } from "./select-builder";
+import { wrapOutput } from "../output/wrapper";
+import type { SoftDeleteMode, WithInput, Wrapper } from "../types/models";
+import type { Builder } from "../types/builder";
+import { applySecurity, controlOutput } from "../security/guard";
+import type { SelectBuilder } from "../query/select";
 import type { ModelContext } from "./context";
 
 /**
@@ -81,7 +82,7 @@ export class OeremBuilder<T extends Record<string, unknown> = Record<string, unk
     /**
      * Get first result
      */
-    async first<R = Record<string, unknown>>(): Promise<R | undefined> {
+    async first<R = T>(): Promise<R | undefined> {
         if (this.ctx.options.softDelete) {
             this.currentQuery.whereNull(this.ctx.deletedAt);
         }

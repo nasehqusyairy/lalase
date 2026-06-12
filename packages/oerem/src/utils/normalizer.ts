@@ -1,4 +1,4 @@
-import type { WithInput } from "./types";
+import type { WithInput } from "../types/models";
 
 /**
  * Ubah variasi input `with()` menjadi struktur callback seragam.
@@ -46,4 +46,3 @@ export function normalizeWith(...inputs: any[]): Record<string, (childBuilder: a
 
 // Re-export type for consumers (kept to avoid unused warnings in some configs)
 export type { WithInput };
-

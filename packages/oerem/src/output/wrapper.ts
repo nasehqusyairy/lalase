@@ -1,9 +1,8 @@
 import type { Knex } from "knex";
-import type { ModelOptions, RelationConfig } from "./types";
-import type { Wrapper } from "./types";
-import { createRelationHandler } from "./relation-handler";
-
-
+import type { ModelOptions } from "../types/models";
+import type { RelationConfig } from "../types/relations";
+import type { Wrapper } from "../types/models";
+import { createRelationHandler } from "../relations/handler";
 
 /**
  * Bungkus output hasil query agar setiap row memiliki method `.related()`.
@@ -34,6 +33,3 @@ export function wrapOutput(
         });
     });
 }
-
-
-

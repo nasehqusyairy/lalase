@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
-import type { ModelOptions, RelationConfig, SoftDeleteMode, WithInput } from "./types";
-import { normalizeWith } from "./with-normalizer";
+import type { RelationConfig } from "../types/relations";
+import type { ModelOptions } from "../types/models";
+import type { SoftDeleteMode, WithInput } from "../types/models";
+import { normalizeWith } from "../utils/normalizer";
 
 /**
  * Jalankan eager loading (stitching) untuk `with()`.
@@ -96,4 +98,3 @@ export async function applyEagerLoading<T extends Record<string, unknown>, U ext
         });
     }
 }
-
