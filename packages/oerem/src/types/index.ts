@@ -31,7 +31,7 @@ export type {
     RelatedMethods,
     PivotMethods,
     PivotRelatedMethods,
-    InferModel,
+    InferBuilder,
 } from './models';
 
 // Re-export from builder

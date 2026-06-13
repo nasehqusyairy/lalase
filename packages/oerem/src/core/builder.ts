@@ -1,7 +1,7 @@
 import type { Knex } from "knex";
 import { executeGet } from "./executor";
 import { wrapOutput } from "../output/wrapper";
-import type { SoftDeleteMode, WithInput, Wrapper } from "../types/models";
+import type { SoftDeleteMode, WithCallback, WithInput, Wrapper } from "../types/models";
 import type { Builder } from "../types/builder";
 import { applySecurity, controlOutput } from "../security/guard";
 import type { SelectBuilder } from "../query/select";
@@ -11,7 +11,7 @@ import type { ModelContext } from "./context";
  * Builder Class - OOP wrapper for query builder
  * Stores state as class properties instead of closure variables
  */
-export class OeremBuilder<T extends Record<string, unknown> = Record<string, unknown>, U extends Record<string, unknown> = {}> implements Builder<T, U> {
+export class OeremBuilder<T extends Record<string, unknown> = Record<string, unknown>, U extends Record<string, any> = {}> implements Builder<T, U> {
     private withRelations: (WithInput<Record<string, unknown>> | string)[] = [];
     private currentQuery: Knex.QueryBuilder<Record<string, unknown>, unknown[]>;
     private softDeleteMode: SoftDeleteMode = 'active';
@@ -44,7 +44,12 @@ export class OeremBuilder<T extends Record<string, unknown> = Record<string, unk
     /**
      * Add eager loading relations
      */
-    with(...args: (WithInput<Record<string, unknown>> | string)[]): this {
+
+    with(relation: keyof U & string): this;
+    with(relations: (keyof U & string)[]): this;
+    with(map: { [K in keyof U]?: any }): this;
+    with(dotNotation: string): this;
+    with(...args: any[]): this {
         this.withRelations.push(...args);
         return this;
     }
@@ -82,12 +87,12 @@ export class OeremBuilder<T extends Record<string, unknown> = Record<string, unk
     /**
      * Get first result
      */
-    async first<R = T>(): Promise<R | undefined> {
+    async first<R = T & U>(): Promise<R & Wrapper<U> | undefined> {
         if (this.ctx.options.softDelete) {
             this.currentQuery.whereNull(this.ctx.deletedAt);
         }
         const results = await this.get<R[]>();
-        return controlOutput([results[0]], this.ctx.options as any)[0] as R | undefined;
+        return controlOutput([results[0]], this.ctx.options as any)[0] as unknown as R & Wrapper<U> | undefined;
     }
 
     /**

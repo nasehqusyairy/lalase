@@ -21,7 +21,7 @@ export interface Builder<T extends Record<string, unknown>, U extends Record<str
 
     // Execution (Return T & U untuk menggabungkan field asli + field relasi)
     get<R extends unknown = (T & U)>(): Promise<(R & Wrapper<U>)[]>;
-    first<R = T & U>(): Promise<R | undefined>;
+    first<R = T & U>(): Promise<R & Wrapper<U> | undefined>;
 
     // Persistence
     create(data: Partial<T>): Promise<T & Wrapper<U>>;

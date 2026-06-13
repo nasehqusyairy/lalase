@@ -8,7 +8,7 @@ import type { Wrapper } from "./models";
 
 export type RelationType = 'hasMany' | 'hasOne' | 'belongsTo' | 'belongsToMany';
 
-export type Model<T extends Record<string, unknown>, U extends Record<string, unknown> = {}> = {
+export type Model<T extends Record<string, unknown>, U extends Record<string, any> = {}> = {
     tableName: string;
 
     with(relation: keyof U & string): OeremBuilder<T, U>;
@@ -72,7 +72,7 @@ export type RelationConfig =
     | BelongsToMany<any>;
 
 // Ambil tipe "isi" dari array atau object
-type Unwrap<T> =
+export type Unwrap<T> =
     T extends (infer I)[] ? I :  // T[] → I
     T extends (infer I) | undefined ? I :  // T | undefined → I
     T;

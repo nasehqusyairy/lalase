@@ -33,13 +33,10 @@ export type SoftDeleteColumn = {
 }
 
 // --- CORE RELATION TYPES ---
-export type WithCallback<
-    T extends Record<string, unknown> = Record<string, unknown>,
-    U extends Record<string, unknown> = Record<string, unknown>
-> = (query: any) => any | unknown;
+export type WithCallback = <M>(query: InferBuilder<M>) => void;
 
 // Untuk with() map, gunakan any agar bisa ditimpa
-export type AnyWithCallback = WithCallback<any, any>;
+export type AnyWithCallback = WithCallback;
 
 type RelatedCallback<V> =
     // Array dengan pivot → belongsToMany → dapat PivotMethods
@@ -73,7 +70,7 @@ export type RelatedMethods<T extends Record<string, unknown>> = {
 
 // Methods khusus belongsToMany
 export type PivotMethods = {
-    attach: (ids: (number | string)[]) => Promise<void>;
+    attach: <T = {}>(ids: (number | string)[], extraPivotData?: T) => Promise<void>;
     detach: (ids: (number | string)[]) => Promise<void>;
     sync: (ids: (number | string)[]) => Promise<void>;
 }
@@ -82,15 +79,14 @@ export type PivotMethods = {
 export type PivotRelatedMethods<T extends Record<string, unknown>> =
     RelatedMethods<T> & PivotMethods;
 
-export type InferModel<M> = M extends OeremModel<infer T, infer U>
-    ? { instance: OeremModel<T, U>; builder: Builder<T, U> }
+export type InferBuilder<M> = M extends OeremModel<infer T, infer U>
+    ? Builder<T, U>
     : never;
 
-// For with() map, use any for simplicity
 export type WithInput<U extends Record<string, unknown> = Record<string, unknown>> =
     | (keyof U & string)
     | (keyof U & string)[]
     | string
     | string[]
-    | { [K in keyof U]?: any }
-    | { [K: string]: any };
+    | { [K in keyof U]?: AnyWithCallback }
+    | { [K: string]: AnyWithCallback };

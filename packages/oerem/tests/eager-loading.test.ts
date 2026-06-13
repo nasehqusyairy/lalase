@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { type InferModel } from '../src/index';
 import { createTestDb, type TestDb } from './helpers/db-setup';
+import type { InferBuilder } from '../src/types/models';
 
 describe('Eager Loading (Relations)', () => {
     let ctx: TestDb;
@@ -55,17 +55,15 @@ describe('Eager Loading (Relations)', () => {
     });
 
     it('should load relationships with nested query constraints', async () => {
-        type MPost = InferModel<typeof ctx.Post>;
-        type MComment = InferModel<typeof ctx.Comment>;
-
         const user = await ctx.User
             .query((q) => q.where('username', 'nasyikh'))
             .with({
-                posts: (p: MPost['builder']) =>
+                posts(p) {
                     p.query((q) => q.where('status', 'published')).with({
-                        comments: (c: MComment['builder']) =>
+                        comments: (c) =>
                             c.query((q) => q.whereLike('content', '%kedua%')).with('user'),
-                    }),
+                    })
+                },
             })
             .first();
 
@@ -122,14 +120,14 @@ describe('Eager Loading (Relations)', () => {
 
         expect(after_attach?.roles).toHaveLength(2);
 
-        const firstRole = after_attach?.roles?.[0] as any;
+        const firstRole = after_attach!.roles![0];
         expect(firstRole.pivot).toBeDefined();
-        expect(firstRole.pivot.user_id).toBe(user.id);
+        expect(firstRole.pivot!.user_id).toBe(user.id);
 
         // Detach admin, create and attach super_admin in one block
-        await (after_attach as any).related({
-            roles: async (r: any) => {
-                await r.detach(adminRole.id);
+        await after_attach!.related({
+            roles: async (r) => {
+                await r.detach([adminRole.id]);
                 await r.create({ name: 'super_admin' });
             },
         });
