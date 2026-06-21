@@ -92,6 +92,7 @@ export interface OeremConfig {
     inputFolder: string
     outputFolder: string
     poolFile: string
+    migrationsFolder: string
 }
 
 // ─── Type Inference Helpers ───────────────────────────────────────────────────

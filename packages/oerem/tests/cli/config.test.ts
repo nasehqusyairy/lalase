@@ -48,7 +48,8 @@ describe('getOeremConfig', () => {
       knex: { client: 'sqlite3' },
       inputFolder: 123,
       outputFolder: './types',
-      poolFile: './pool.ts'
+      poolFile: './pool.ts',
+      migrationsFolder: './migrations'
     }`)
         await expect(getOeremConfig(tmpDir)).rejects.toThrow('"inputFolder" must be a string')
     })
@@ -58,7 +59,8 @@ describe('getOeremConfig', () => {
       knex: { client: 'sqlite3', connection: ':memory:' },
       inputFolder: './models',
       outputFolder: './types',
-      poolFile: './pool.ts'
+      poolFile: './pool.ts',
+      migrationsFolder: './migrations'
     }`)
 
         const config = await getOeremConfig(tmpDir)
@@ -66,5 +68,6 @@ describe('getOeremConfig', () => {
         expect(config.inputFolder).toBe('./models')
         expect(config.outputFolder).toBe('./types')
         expect(config.poolFile).toBe('./pool.ts')
+        expect(config.migrationsFolder).toBe('./migrations')
     })
 })

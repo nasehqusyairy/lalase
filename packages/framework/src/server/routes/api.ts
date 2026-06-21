@@ -1,4 +1,4 @@
-import userModel from '@server/models/user-model';
+import userModel from '@server/models/user.model';
 import { RouteBuilder } from '@server/core/router';
 
 const route = new RouteBuilder();

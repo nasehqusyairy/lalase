@@ -77,7 +77,7 @@ describe('serializeModel', () => {
 
     it('strips hashFn (not serializable)', () => {
         const snap = serializeModel(userDef)
-        expect((snap.schema.password as Record<string, unknown>).hashFn).toBeUndefined()
+        expect((snap.schema.password as any).hashFn).toBeUndefined()
     })
 
     it('serializes foreign key metadata', () => {
@@ -89,7 +89,7 @@ describe('serializeModel', () => {
 
     it('relations are not included in snapshot (DDL only)', () => {
         const snap = serializeModel(postDef)
-        expect((snap as Record<string, unknown>).relations).toBeUndefined()
+        expect((snap as any).relations).toBeUndefined()
     })
 })
 
@@ -284,36 +284,41 @@ describe('diffSchemas', () => {
 
 describe('generateDiffMigration', () => {
     let tmpDir: string
+    let migrationsDir: string
 
-    beforeEach(() => { tmpDir = makeTmpDir() })
+    beforeEach(() => {
+        tmpDir = makeTmpDir()
+        migrationsDir = resolve(tmpDir, 'migrations')
+        mkdirSync(migrationsDir, { recursive: true })
+    })
     afterEach(() => { if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true }) })
 
     it('generates full create migration when no snapshot exists', () => {
-        const filePath = generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        const filePath = generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
         expect(filePath).not.toBeNull()
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("createTable('users'")
     })
 
     it('saves snapshot after first migration', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
         expect(existsSync(snapshotPath(tmpDir))).toBe(true)
     })
 
     it('returns null when no changes detected', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
-        const result = generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
+        const result = generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
         expect(result).toBeNull()
     })
 
     it('generates alterTable for added column', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
 
         const updatedUser: ModelDef = {
             ...userDef,
             schema: { ...userDef.schema, age: field.integer().nullable().build() },
         }
-        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir)
+        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
         expect(filePath).not.toBeNull()
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("alterTable('users'")
@@ -321,49 +326,49 @@ describe('generateDiffMigration', () => {
     })
 
     it('generates dropColumn for removed column', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
 
         const { email: _, ...restSchema } = userDef.schema
         const updatedUser: ModelDef = { ...userDef, schema: restSchema }
-        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir)
+        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("dropColumn('email')")
     })
 
     it('generates createTable for new model', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
-        const filePath = generateDiffMigration([toDiscovered(userDef), toDiscovered(postDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
+        const filePath = generateDiffMigration([toDiscovered(userDef), toDiscovered(postDef)], tmpDir, migrationsDir)
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("createTable('posts'")
     })
 
     it('generates dropTableIfExists for removed model', () => {
-        generateDiffMigration([toDiscovered(userDef), toDiscovered(postDef)], tmpDir)
-        const filePath = generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef), toDiscovered(postDef)], tmpDir, migrationsDir)
+        const filePath = generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("dropTableIfExists('posts')")
     })
 
     it('migration has up and down functions', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
         const updatedUser: ModelDef = {
             ...userDef,
             schema: { ...userDef.schema, bio: field.text().nullable().build() },
         }
-        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir)
+        const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain('export async function up')
         expect(content).toContain('export async function down')
     })
 
     it('updates snapshot after diff migration', () => {
-        generateDiffMigration([toDiscovered(userDef)], tmpDir)
+        generateDiffMigration([toDiscovered(userDef)], tmpDir, migrationsDir)
 
         const updatedUser: ModelDef = {
             ...userDef,
             schema: { ...userDef.schema, age: field.integer().nullable().build() },
         }
-        generateDiffMigration([toDiscovered(updatedUser)], tmpDir)
+        generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
 
         const snap = loadSnapshot(tmpDir)!
         const userSnap = snap.models.find(m => m.identifier === 'User')

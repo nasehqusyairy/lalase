@@ -10,17 +10,18 @@ import {
 } from '@server/config/session';
 import type { RequestHandler } from 'express';
 import { ConnectSessionKnexStore } from 'connect-session-knex';
-import { db } from './database';
 import { APP_DEBUG } from '@server/config/app';
 import { context } from './context';
 import type e from 'express';
 import vine from '@vinejs/vine';
-import userModel from '@server/models/user-model';
+import userModel from '@server/models/user.model';
 import { back } from './inertia';
+import pool from '@server/core/pool'
+import { User } from '@server/models';
 
 export default session({
     store: new ConnectSessionKnexStore({
-        knex: db(),
+        knex: pool.getKnex(),
         createTable: true,
         cleanupInterval: SESSION_LIFETIME
     }),
@@ -76,7 +77,7 @@ export async function setAuth(credential: Credential & { user?: AuthData }) {
 
         const validated = await vine.create(rule).validate(credential);
 
-        user = await userModel.query(q => q.where('email', validated.email)).first();
+        user = (await User.query().where({ email: validated.email }).first())!;
 
         if (!user || user.password !== validated.password) {
             const errors = { email: 'Wrong email or password' };

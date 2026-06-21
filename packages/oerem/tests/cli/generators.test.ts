@@ -105,60 +105,65 @@ describe('generateRegistry', () => {
 
 describe('generateMigration', () => {
     let tmpDir: string
+    let migrationsDir: string
 
-    beforeEach(() => { tmpDir = makeTmpDir() })
+    beforeEach(() => {
+        tmpDir = makeTmpDir()
+        migrationsDir = resolve(tmpDir, 'migrations')
+        mkdirSync(migrationsDir, { recursive: true })
+    })
     afterEach(() => { if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true }) })
 
-    it('creates migrations directory', () => {
-        generateMigration([userModel], tmpDir)
-        expect(existsSync(resolve(tmpDir, 'migrations'))).toBe(true)
+    it('throws if migrations folder does not exist', () => {
+        const missing = resolve(tmpDir, 'nonexistent')
+        expect(() => generateMigration([userModel], missing)).toThrow('Migrations folder not found')
     })
 
     it('generates a migration file', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         expect(existsSync(filePath)).toBe(true)
         expect(filePath).toMatch(/\.ts$/)
     })
 
     it('migration file has up and down exports', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain('export async function up')
         expect(content).toContain('export async function down')
     })
 
     it('migration creates correct table', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("createTable('users'")
     })
 
     it('migration generates increments for integer primary', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("increments('id')")
     })
 
     it('migration generates varchar with length', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("string('name', 100)")
     })
 
     it('migration generates nullable column', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("string('email', 255).nullable().unique()")
     })
 
     it('migration generates boolean with default', () => {
-        const filePath = generateMigration([userModel], tmpDir)
+        const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("boolean('is_active').notNullable().defaultTo(true)")
     })
 
     it('migration generates foreign key with cascade', () => {
-        const filePath = generateMigration([postModel], tmpDir)
+        const filePath = generateMigration([postModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("foreign('user_id').references('id').inTable('users')")
         expect(content).toContain(".onDelete('CASCADE')")
@@ -166,17 +171,16 @@ describe('generateMigration', () => {
     })
 
     it('migration drops tables in reverse order in down()', () => {
-        const filePath = generateMigration([userModel, postModel], tmpDir)
+        const filePath = generateMigration([userModel, postModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         const downIdx = content.indexOf('async function down')
         const dropUsers = content.indexOf("dropTableIfExists('users')", downIdx)
         const dropPosts = content.indexOf("dropTableIfExists('posts')", downIdx)
-        // posts dropped before users (reverse order)
         expect(dropPosts).toBeLessThan(dropUsers)
     })
 
     it('uses custom migration name', () => {
-        const filePath = generateMigration([userModel], tmpDir, 'add_users_table')
+        const filePath = generateMigration([userModel], migrationsDir, 'add_users_table')
         expect(filePath).toContain('add_users_table')
     })
 
@@ -195,7 +199,7 @@ describe('generateMigration', () => {
             },
         }
 
-        const filePath = generateMigration([uuidModel], tmpDir)
+        const filePath = generateMigration([uuidModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
         expect(content).toContain("uuid('id')")
         expect(content).not.toContain("increments('id')")

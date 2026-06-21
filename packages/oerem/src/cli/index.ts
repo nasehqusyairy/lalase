@@ -38,6 +38,7 @@ async function main() {
         const config = await getOeremConfig(cwd)
         const inputFolder = resolve(cwd, config.inputFolder)
         const outputFolder = resolve(cwd, config.outputFolder)
+        const migrationsFolder = resolve(cwd, config.migrationsFolder)
 
         switch (command) {
 
@@ -73,14 +74,14 @@ async function main() {
                     break
                 }
                 const name = args[0] ?? 'schema_update'
-                generateDiffMigration(models, cwd, name)
+                generateDiffMigration(models, cwd, migrationsFolder, name)
                 console.log(`\n  Done.\n`)
                 break
             }
 
             // ── migrate ─────────────────────────────────────────────────────────────
             case 'migrate': {
-                const knex = await buildKnex(config)
+                const knex = await buildKnex(config, migrationsFolder)
                 try {
                     const [batch, files] = await knex.migrate.latest()
                     if (files.length === 0) {
@@ -98,7 +99,7 @@ async function main() {
 
             // ── rollback ────────────────────────────────────────────────────────────
             case 'rollback': {
-                const knex = await buildKnex(config)
+                const knex = await buildKnex(config, migrationsFolder)
                 try {
                     const [batch, files] = await knex.migrate.rollback()
                     if (files.length === 0) {
@@ -135,13 +136,13 @@ async function main() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function buildKnex(config: import('../schema/types.js').OeremConfig) {
+async function buildKnex(config: import('../schema/types.js').OeremConfig, migrationsFolder: string) {
     const { default: Knex } = await import('knex')
     return Knex({
         ...config.knex,
         migrations: {
             extension: 'ts',
-            directory: './migrations',
+            directory: migrationsFolder,
             ...(typeof config.knex.migrations === 'object' ? config.knex.migrations : {}),
         },
     })

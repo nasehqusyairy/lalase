@@ -1,11 +1,7 @@
-import { mkdirSync, writeFileSync, existsSync, readdirSync, readFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { FieldMeta, ModelDef, SqlColumnType } from '../../schema/types.js'
 import type { DiscoveredModel } from '../scanner.js'
-
-// ─── Migration Generator ──────────────────────────────────────────────────────
-
-const MIGRATIONS_DIR = 'migrations'
 
 // ─── Knex column builder call from FieldMeta ─────────────────────────────────
 
@@ -181,17 +177,18 @@ function migrationTimestamp(): string {
 
 export function generateMigration(
     models: DiscoveredModel[],
-    cwd: string,
+    migrationsFolder: string,
     name: string = 'create_tables',
 ): string {
-    const migrationsDir = resolve(cwd, MIGRATIONS_DIR)
-
-    if (!existsSync(migrationsDir)) {
-        mkdirSync(migrationsDir, { recursive: true })
+    if (!existsSync(migrationsFolder)) {
+        throw new Error(
+            `Migrations folder not found: ${migrationsFolder}\n` +
+            `Create the folder and set "migrationsFolder" in oerem.config.ts`
+        )
     }
 
     const fileName = `${migrationTimestamp()}_${name}.ts`
-    const filePath = resolve(migrationsDir, fileName)
+    const filePath = resolve(migrationsFolder, fileName)
     const content = generateMigrationContent(models)
 
     writeFileSync(filePath, content, 'utf-8')

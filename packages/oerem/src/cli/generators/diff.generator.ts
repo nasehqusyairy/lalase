@@ -45,15 +45,15 @@ export function loadSnapshot(cwd: string): SchemaSnapshot | null {
 export function generateDiffMigration(
     models: DiscoveredModel[],
     cwd: string,
+    migrationsFolder: string,
     name: string = 'schema_update',
 ): string | null {
     const previous = loadSnapshot(cwd)
     const currentSnapshot = createSnapshot(models.map(m => m.def))
 
-    // No previous snapshot → fall back to full create migration
     if (!previous) {
         console.log('  ℹ No snapshot found. Generating full create migration.')
-        const filePath = generateMigration(models, cwd, name)
+        const filePath = generateMigration(models, migrationsFolder, name)
         saveSnapshot(models.map(m => m.def), cwd)
         return filePath
     }
@@ -65,7 +65,6 @@ export function generateDiffMigration(
         return null
     }
 
-    // Log changes
     for (const td of diff.tableDiffs) {
         if (td.changeType === 'created') {
             console.log(`  + Table created: ${td.table}`)
@@ -80,9 +79,8 @@ export function generateDiffMigration(
     }
 
     const content = buildDiffMigrationContent(diff.tableDiffs)
-    const filePath = writeMigrationFile(content, cwd, name)
+    const filePath = writeMigrationFile(content, migrationsFolder, name)
 
-    // Save updated snapshot after generating migration
     saveSnapshot(models.map(m => m.def), cwd)
 
     return filePath
@@ -305,12 +303,16 @@ function migrationTimestamp(): string {
     return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)
 }
 
-function writeMigrationFile(content: string, cwd: string, name: string): string {
-    const migrationsDir = resolve(cwd, 'migrations')
-    if (!existsSync(migrationsDir)) mkdirSync(migrationsDir, { recursive: true })
+function writeMigrationFile(content: string, migrationsFolder: string, name: string): string {
+    if (!existsSync(migrationsFolder)) {
+        throw new Error(
+            `Migrations folder not found: ${migrationsFolder}\n` +
+            `Create the folder and set "migrationsFolder" in oerem.config.ts`
+        )
+    }
 
     const fileName = `${migrationTimestamp()}_${name}.ts`
-    const filePath = resolve(migrationsDir, fileName)
+    const filePath = resolve(migrationsFolder, fileName)
     writeFileSync(filePath, content, 'utf-8')
     console.log(`  ✔ Generated migration: ${fileName}`)
     return filePath
