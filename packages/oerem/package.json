@@ -41,6 +41,7 @@
   "author": "Mohammad Nasyikh Al-Qusyairy",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^22.0.0",
     "knex": "^3.2.9",
     "sqlite3": "^5.1.7",
@@ -85,5 +86,8 @@
     "better-sqlite3": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
   }
 }
