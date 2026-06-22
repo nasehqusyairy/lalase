@@ -81,7 +81,7 @@ async function main() {
 
             // ── migrate ─────────────────────────────────────────────────────────────
             case 'migrate': {
-                const knex = await buildKnex(config, migrationsFolder)
+                const knex = await buildKnexFromPool(resolve(cwd, config.poolFile), migrationsFolder)
                 try {
                     const [batch, files] = await knex.migrate.latest()
                     if (files.length === 0) {
@@ -99,7 +99,7 @@ async function main() {
 
             // ── rollback ────────────────────────────────────────────────────────────
             case 'rollback': {
-                const knex = await buildKnex(config, migrationsFolder)
+                const knex = await buildKnexFromPool(resolve(cwd, config.poolFile), migrationsFolder)
                 try {
                     const [batch, files] = await knex.migrate.rollback()
                     if (files.length === 0) {
@@ -122,7 +122,8 @@ async function main() {
                     console.warn('  ⚠ No model files found in', inputFolder)
                     break
                 }
-                await simulateSchema(models, config.knex)
+                const knexConfig = await loadKnexConfigFromPool(resolve(cwd, config.poolFile))
+                await simulateSchema(models, knexConfig)
                 console.log()
                 break
             }
@@ -136,14 +137,64 @@ async function main() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function buildKnex(config: import('../schema/types.js').OeremConfig, migrationsFolder: string) {
+// ─── Load knex config from pool file via tsx ──────────────────────────────────
+// The pool file exports an OeremPool instance. We extract its knex config
+// by reading the pool file's default export knex configuration via child process.
+
+async function loadKnexConfigFromPool(
+    poolFile: string,
+): Promise<import('knex').Knex.Config> {
+    const { execSync } = await import('node:child_process')
+    const { createRequire } = await import('node:module')
+    const { existsSync } = await import('node:fs')
+
+    // Resolve .ts extension if not provided
+    const resolved = existsSync(poolFile)
+        ? poolFile
+        : existsSync(`${poolFile}.ts`)
+            ? `${poolFile}.ts`
+            : poolFile
+
+    const _require = createRequire(import.meta.url)
+    let tsxBin: string
+    try {
+        const tsxPkg = _require.resolve('tsx/package.json')
+        const tsxRoot = tsxPkg.replace('/package.json', '')
+        const bin = `${tsxRoot}/../.bin/tsx`
+        tsxBin = existsSync(bin) ? bin : 'tsx'
+    } catch {
+        tsxBin = 'tsx'
+    }
+
+    const script = `
+import pool from ${JSON.stringify(resolved)};
+const knex = pool.getKnex();
+const config = knex.client.config;
+process.stdout.write(JSON.stringify({
+  client: config.client,
+  connection: config.connection,
+  pool: config.pool,
+  searchPath: config.searchPath,
+}));
+`
+
+    const output = execSync(`${tsxBin} --input-type=module`, {
+        input: script,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+    })
+
+    return JSON.parse(output) as import('knex').Knex.Config
+}
+
+async function buildKnexFromPool(poolFile: string, migrationsFolder: string) {
     const { default: Knex } = await import('knex')
+    const knexConfig = await loadKnexConfigFromPool(poolFile)
     return Knex({
-        ...config.knex,
+        ...knexConfig,
         migrations: {
             extension: 'ts',
             directory: migrationsFolder,
-            ...(typeof config.knex.migrations === 'object' ? config.knex.migrations : {}),
         },
     })
 }

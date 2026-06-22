@@ -1,10 +1,10 @@
-import aboutController from '@server/controllers/about-controller';
-import usersController from '@server/controllers/users-controller';
-import authController from '@server/controllers/auth-controller';
-import authMiddleware from '@server/middlewares/auth-middleware';
+import aboutController from '@server/controllers/about.controller';
+import usersController from '@server/controllers/users.controller';
+import authController from '@server/controllers/auth.controller';
+import authMiddleware from '@server/middlewares/auth.middleware';
 import { view } from '@server/core/inertia';
 import { RouteBuilder } from '@server/core/router';
-import guestMiddleware from '@server/middlewares/guest-middleware';
+import guestMiddleware from '@server/middlewares/guest.middleware';
 
 const route = new RouteBuilder();
 

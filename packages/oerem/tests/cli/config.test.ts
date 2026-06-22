@@ -39,13 +39,12 @@ describe('getOeremConfig', () => {
     })
 
     it('throws if required fields are missing', async () => {
-        writeConfig(tmpDir, `export default { knex: {} }`)
+        writeConfig(tmpDir, `export default { inputFolder: './models' }`)
         await expect(getOeremConfig(tmpDir)).rejects.toThrow('missing required field')
     })
 
     it('throws if inputFolder is not a string', async () => {
         writeConfig(tmpDir, `export default {
-      knex: { client: 'sqlite3' },
       inputFolder: 123,
       outputFolder: './types',
       poolFile: './pool.ts',
@@ -56,7 +55,6 @@ describe('getOeremConfig', () => {
 
     it('returns valid config', async () => {
         writeConfig(tmpDir, `export default {
-      knex: { client: 'sqlite3', connection: ':memory:' },
       inputFolder: './models',
       outputFolder: './types',
       poolFile: './pool.ts',
@@ -64,7 +62,6 @@ describe('getOeremConfig', () => {
     }`)
 
         const config = await getOeremConfig(tmpDir)
-        expect(config.knex).toEqual({ client: 'sqlite3', connection: ':memory:' })
         expect(config.inputFolder).toBe('./models')
         expect(config.outputFolder).toBe('./types')
         expect(config.poolFile).toBe('./pool.ts')

@@ -1,23 +1,14 @@
 import type { Knex } from 'knex'
-import type { ModelDef, RelationMeta } from '../schema/types.js'
-import { applyHiddenFields, applyHiddenFieldsToMany, applyHashing } from './processor.js'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface PaginateResult<T> {
-    data: T[]
-    total: number
-    page: number
-    perPage: number
-    lastPage: number
-}
-
-export type OrderDirection = 'asc' | 'desc'
+import type { ModelDef } from '../schema/types.js'
+import { applyHashing } from './processor.js'
+import { OeremQueryBuilder, getPrimaryKeyFromDef, type PaginateResult, type OrderDirection } from './query-builder.js'
 
 // ─── OeremModel ───────────────────────────────────────────────────────────────
+// T — full schema type (already includes R via intersection in generated types)
+// R — relation keys, used only to constrain .with() and .query().with() calls
 
-export class OeremModel<T extends object, R extends object> {
-    private readonly knex: Knex
+export class OeremModel<T extends object, R extends object = Record<string, never>> {
+    protected readonly knex: Knex
     readonly def: ModelDef
 
     constructor(knex: Knex, def: ModelDef) {
@@ -25,73 +16,46 @@ export class OeremModel<T extends object, R extends object> {
         this.def = def
     }
 
-    // ── Internal query builder ─────────────────────────────────────────────────
+    // ─── Query builder entry point ─────────────────────────────────────────────
 
-    private qb(): Knex.QueryBuilder {
-        return this.knex(this.def.table)
+    query(): OeremQueryBuilder<T, R> {
+        return new OeremQueryBuilder<T, R>(this.knex, this.def)
     }
 
-    // ── Post-process rows ──────────────────────────────────────────────────────
-
-    private process(row: T): T {
-        return applyHiddenFields(row, this.def)
-    }
-
-    private processMany(rows: T[]): T[] {
-        return applyHiddenFieldsToMany(rows, this.def)
-    }
-
-    // ─── Find ──────────────────────────────────────────────────────────────────
+    // ─── Shorthand: find ──────────────────────────────────────────────────────
 
     async findMany(
         where?: Partial<T>,
         options?: {
-            orderBy?: { column: keyof T; direction?: OrderDirection }
+            orderBy?: { column: keyof T & string; direction?: OrderDirection }
             limit?: number
             offset?: number
         }
     ): Promise<T[]> {
-        let q = this.qb().select('*')
-
-        if (where) q = q.where(where as Record<string, unknown>)
-        if (options?.orderBy) {
-            q = q.orderBy(options.orderBy.column as string, options.orderBy.direction ?? 'asc')
-        }
+        let q = this.query()
+        if (where) q = q.where(where)
+        if (options?.orderBy) q = q.orderBy(options.orderBy.column, options.orderBy.direction)
         if (options?.limit !== undefined) q = q.limit(options.limit)
         if (options?.offset !== undefined) q = q.offset(options.offset)
-
-        const rows = await q as T[]
-        return this.processMany(rows)
+        return q.get()
     }
 
     async findOne(where: Partial<T>): Promise<T | null> {
-        const row = await this.qb()
-            .select('*')
-            .where(where as Record<string, unknown>)
-            .first() as T | undefined
-
-        return row ? this.process(row) : null
+        return this.query().where(where).first()
     }
 
     async findById(id: number | string): Promise<T | null> {
         const pkColumn = this.getPrimaryKey()
-        const row = await this.qb()
-            .select('*')
-            .where({ [pkColumn]: id })
-            .first() as T | undefined
-
-        return row ? this.process(row) : null
+        return this.query().where({ [pkColumn]: id } as Partial<T>).first()
     }
 
-    // ─── Insert ────────────────────────────────────────────────────────────────
+    // ─── Shorthand: insert ────────────────────────────────────────────────────
 
     async insert(data: Partial<T>): Promise<T> {
         const hashed = await applyHashing(data as Record<string, unknown>, this.def)
         const pkColumn = this.getPrimaryKey()
-
-        const [id] = await this.qb().insert(hashed)
+        const [id] = await this.knex(this.def.table).insert(hashed)
         const row = await this.findById(id ?? (hashed[pkColumn] as number | string))
-
         if (!row) throw new Error(`Insert succeeded but could not retrieve the created row.`)
         return row
     }
@@ -100,233 +64,66 @@ export class OeremModel<T extends object, R extends object> {
         const hashed = await Promise.all(
             rows.map(r => applyHashing(r as Record<string, unknown>, this.def))
         )
-        await this.qb().insert(hashed)
+        await this.knex(this.def.table).insert(hashed)
     }
 
-    // ─── Update ────────────────────────────────────────────────────────────────
+    // ─── Shorthand: update ────────────────────────────────────────────────────
 
     async update(where: Partial<T>, data: Partial<T>): Promise<number> {
-        const hashed = await applyHashing(data as Record<string, unknown>, this.def)
-        return this.qb()
-            .where(where as Record<string, unknown>)
-            .update(hashed)
+        return this.query().where(where).update(data)
     }
 
     async updateById(id: number | string, data: Partial<T>): Promise<T | null> {
         const pkColumn = this.getPrimaryKey()
-        const hashed = await applyHashing(data as Record<string, unknown>, this.def)
-
-        await this.qb()
-            .where({ [pkColumn]: id })
-            .update(hashed)
-
+        await this.query().where({ [pkColumn]: id } as Partial<T>).update(data)
         return this.findById(id)
     }
 
-    // ─── Delete ────────────────────────────────────────────────────────────────
+    // ─── Shorthand: delete ────────────────────────────────────────────────────
 
     async delete(where: Partial<T>): Promise<number> {
-        return this.qb()
-            .where(where as Record<string, unknown>)
-            .delete()
+        return this.query().where(where).delete()
     }
 
     async deleteById(id: number | string): Promise<number> {
         const pkColumn = this.getPrimaryKey()
-        return this.qb()
-            .where({ [pkColumn]: id })
-            .delete()
+        return this.query().where({ [pkColumn]: id } as Partial<T>).delete()
     }
 
-    // ─── Paginate ──────────────────────────────────────────────────────────────
+    // ─── Shorthand: paginate ──────────────────────────────────────────────────
 
     async paginate(
         page: number,
         perPage: number,
         where?: Partial<T>,
     ): Promise<PaginateResult<T>> {
-        const offset = (page - 1) * perPage
-
-        let countQ = this.qb().count('* as total')
-        let dataQ = this.qb().select('*').limit(perPage).offset(offset)
-
-        if (where) {
-            countQ = countQ.where(where as Record<string, unknown>)
-            dataQ = dataQ.where(where as Record<string, unknown>)
-        }
-
-        const [{ total }, rows] = await Promise.all([
-            countQ.first() as Promise<{ total: number | string }>,
-            dataQ as Promise<T[]>,
-        ])
-
-        const totalNum = Number(total)
-
-        return {
-            data: this.processMany(rows),
-            total: totalNum,
-            page,
-            perPage,
-            lastPage: Math.ceil(totalNum / perPage),
-        }
+        let q = this.query()
+        if (where) q = q.where(where)
+        return q.paginate(page, perPage)
     }
 
-    // ─── Eager loading ─────────────────────────────────────────────────────────
+    // ─── Shorthand: with ──────────────────────────────────────────────────────
+    // Fetch rows by PK and eager load relations in one step
 
     async with<K extends keyof R>(
         rows: T[],
         ...relations: K[]
-    ): Promise<(T & Pick<R, K>)[]> {
-        if (rows.length === 0) return rows as (T & Pick<R, K>)[]
-
-        const result = rows.map(r => ({ ...r })) as (T & Pick<R, K>)[]
-
-        for (const relationKey of relations) {
-            const relMeta = this.def.relations?.[relationKey as string]
-            if (!relMeta) {
-                throw new Error(
-                    `Relation "${String(relationKey)}" not found on model "${this.def.identifier}".`
-                )
-            }
-            await this.loadRelation(result as Record<string, unknown>[], relationKey as string, relMeta)
-        }
-
-        return this.processMany(result as T[]) as (T & Pick<R, K>)[]
+    ): Promise<T[]> {
+        if (rows.length === 0) return rows
+        const pkCol = this.getPrimaryKey()
+        const ids = rows.map(r => (r as Record<string, unknown>)[pkCol])
+        return this.query()
+            .whereIn(pkCol as keyof T & string, ids)
+            .with(...(relations as (keyof R & string)[]))
+            .get()
     }
 
-    private async loadRelation(
-        rows: Record<string, unknown>[],
-        key: string,
-        rel: RelationMeta,
-    ): Promise<void> {
-        const relatedDef = rel.ref()
+    // ─── Helpers ──────────────────────────────────────────────────────────────
 
-        switch (rel.type) {
-            case 'hasMany': {
-                const pkCol = this.getPrimaryKey()
-                const ids = [...new Set(rows.map(r => r[pkCol]))]
-                const related = await this.knex(relatedDef.table)
-                    .whereIn(rel.foreignKey, ids as (string | number)[])
-                const grouped = groupBy(related, rel.foreignKey)
-
-                for (const row of rows) {
-                    row[key] = grouped[String(row[pkCol])] ?? []
-                }
-                break
-            }
-
-            case 'hasOne': {
-                const pkCol = this.getPrimaryKey()
-                const ids = [...new Set(rows.map(r => r[pkCol]))]
-                const related = await this.knex(relatedDef.table)
-                    .whereIn(rel.foreignKey, ids as (string | number)[])
-                const indexed = indexBy(related, rel.foreignKey)
-
-                for (const row of rows) {
-                    row[key] = indexed[String(row[pkCol])] ?? null
-                }
-                break
-            }
-
-            case 'belongsTo': {
-                const fkValues = [...new Set(rows.map(r => r[rel.foreignKey]))]
-                const pkCol = getPrimaryKeyFromDef(relatedDef)
-                const related = await this.knex(relatedDef.table)
-                    .whereIn(pkCol, fkValues as (string | number)[])
-                const indexed = indexBy(related, pkCol)
-
-                for (const row of rows) {
-                    row[key] = indexed[String(row[rel.foreignKey])] ?? null
-                }
-                break
-            }
-
-            case 'belongsToMany': {
-                if (!rel.pivotTable || !rel.relatedForeignKey) {
-                    throw new Error(
-                        `belongsToMany relation "${key}" is missing pivotTable or relatedForeignKey.`
-                    )
-                }
-
-                const pkCol = this.getPrimaryKey()
-                const ids = [...new Set(rows.map(r => r[pkCol]))]
-
-                const pivotRows = await this.knex(rel.pivotTable)
-                    .whereIn(rel.foreignKey, ids as (string | number)[])
-
-                const relatedIds = [
-                    ...new Set(
-                        pivotRows.map((p: Record<string, unknown>) => p[rel.relatedForeignKey!])
-                    ),
-                ]
-                const relatedPkCol = getPrimaryKeyFromDef(relatedDef)
-                const related = await this.knex(relatedDef.table)
-                    .whereIn(relatedPkCol, relatedIds as (string | number)[])
-
-                const relatedById = indexBy(related, relatedPkCol)
-
-                const grouped: Record<string, unknown[]> = {}
-                for (const pivot of pivotRows as Record<string, unknown>[]) {
-                    const ownerId = String(pivot[rel.foreignKey])
-                    const relatedId = String(pivot[rel.relatedForeignKey!])
-                    if (!grouped[ownerId]) grouped[ownerId] = []
-                    const relatedRow = relatedById[relatedId]
-                    if (relatedRow) grouped[ownerId].push(relatedRow)
-                }
-
-                for (const row of rows) {
-                    row[key] = grouped[String(row[pkCol])] ?? []
-                }
-                break
-            }
-        }
-    }
-
-    // ─── Raw access ────────────────────────────────────────────────────────────
-
-    raw(sql: string, bindings?: Knex.RawBinding): Knex.Raw {
-        return this.knex.raw(sql, bindings as Knex.RawBinding)
-    }
-
-    query(): Knex.QueryBuilder {
-        return this.qb()
-    }
-
-    // ─── Helpers ───────────────────────────────────────────────────────────────
-
-    private getPrimaryKey(): string {
+    protected getPrimaryKey(): string {
         return getPrimaryKeyFromDef(this.def)
     }
 }
 
-// ─── Module-level helpers ─────────────────────────────────────────────────────
-
-function getPrimaryKeyFromDef(def: ModelDef): string {
-    const pk = Object.entries(def.schema).find(([, meta]) => meta.isPrimary)
-    if (!pk) throw new Error(`Model "${def.identifier}" has no primary key defined.`)
-    return pk[0]
-}
-
-function groupBy(
-    rows: Record<string, unknown>[],
-    key: string,
-): Record<string, Record<string, unknown>[]> {
-    const result: Record<string, Record<string, unknown>[]> = {}
-    for (const row of rows) {
-        const k = String(row[key])
-        if (!result[k]) result[k] = []
-        result[k].push(row)
-    }
-    return result
-}
-
-function indexBy(
-    rows: Record<string, unknown>[],
-    key: string,
-): Record<string, Record<string, unknown>> {
-    const result: Record<string, Record<string, unknown>> = {}
-    for (const row of rows) {
-        result[String(row[key])] = row
-    }
-    return result
-}
+// ─── Re-export types ──────────────────────────────────────────────────────────
+export type { PaginateResult, OrderDirection }

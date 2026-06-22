@@ -44,7 +44,7 @@ export async function getOeremConfig(cwd: string = process.cwd()): Promise<Oerem
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 function validateConfig(config: Record<string, unknown>, configPath: string): void {
-    const required = ['knex', 'inputFolder', 'outputFolder', 'poolFile', 'migrationsFolder'] as const
+    const required = ['inputFolder', 'outputFolder', 'poolFile', 'migrationsFolder'] as const
 
     for (const key of required) {
         if (config[key] === undefined || config[key] === null) {

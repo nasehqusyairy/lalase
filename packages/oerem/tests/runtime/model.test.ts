@@ -5,29 +5,41 @@ import { OeremPool } from '../../src/runtime/pool.js'
 import { createTestKnex, setupSchema, userDef, postDef, profileDef, roleDef } from './helpers.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+// Mirrors generated types: T includes relations via intersection
 
-type User = { id: number; name: string; email: string | null; password: string; is_active: boolean }
-type UserR = { posts?: Post[]; profile?: Profile | null; roles?: Role[] }
-type Post = { id: number; title: string; user_id: number }
-type PostR = { user?: User | null }
+type Post = { id: number; title: string; user_id: number; user?: User | null }
 type Profile = { id: number; bio: string | null; user_id: number }
 type Role = { id: number; name: string }
+
+type User = {
+    id: number
+    name: string
+    email: string | null
+    password: string
+    is_active: boolean
+    posts?: Post[]
+    profile?: Profile | null
+    roles?: Role[]
+}
+
+type UserR = { posts: Post[]; profile: Profile | null; roles: Role[] }
+type PostR = { user: User | null }
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let knex: Knex
 let User: OeremModel<User, UserR>
 let Post: OeremModel<Post, PostR>
-let Profile: OeremModel<Profile, Record<string, never>>
-let Role: OeremModel<Role, Record<string, never>>
+let Profile: OeremModel<Profile>
+let Role: OeremModel<Role>
 
 beforeEach(async () => {
     knex = createTestKnex()
     await setupSchema(knex)
     User = new OeremModel<User, UserR>(knex, userDef)
     Post = new OeremModel<Post, PostR>(knex, postDef)
-    Profile = new OeremModel<Profile, Record<string, never>>(knex, profileDef)
-    Role = new OeremModel<Role, Record<string, never>>(knex, roleDef)
+    Profile = new OeremModel<Profile>(knex, profileDef)
+    Role = new OeremModel<Role>(knex, roleDef)
 })
 
 afterEach(async () => {

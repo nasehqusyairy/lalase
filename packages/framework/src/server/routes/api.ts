@@ -1,5 +1,5 @@
-import userModel from '@server/models/user.model';
 import { RouteBuilder } from '@server/core/router';
+import { User } from '@server/models';
 
 const route = new RouteBuilder();
 
@@ -8,7 +8,7 @@ route.get('/', async ({ res }) => {
 }).name('api.index');
 
 route.get('/users', async ({ res }) => {
-    const users = await userModel.all()
+    const users = await User.query().get()
     return res.json({ data: { users } });
 }).name('api.users');
 

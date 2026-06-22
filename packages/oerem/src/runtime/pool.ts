@@ -3,10 +3,9 @@ import type { Knex as KnexType } from 'knex'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { ModelDef } from '../schema/types.js'
 import { OeremModel } from './model.js'
+import { OeremQueryBuilder } from './query-builder.js'
 
 // ─── Transaction Storage ──────────────────────────────────────────────────────
-// Stores the active transaction per async context so models automatically
-// use the transaction when one is active.
 
 const txStorage = new AsyncLocalStorage<KnexType.Transaction>()
 
@@ -19,15 +18,11 @@ export class OeremPool {
         this.knex = Knex(config)
     }
 
-    // ─── Create model ──────────────────────────────────────────────────────────
-
     createModel<T extends object, R extends object>(
         def: ModelDef,
     ): OeremModel<T, R> {
         return new TransactionAwareModel<T, R>(this.knex, def, txStorage)
     }
-
-    // ─── Transaction ───────────────────────────────────────────────────────────
 
     async transaction<Result>(
         callback: () => Promise<Result>,
@@ -37,20 +32,14 @@ export class OeremPool {
         })
     }
 
-    // ─── Raw query ─────────────────────────────────────────────────────────────
-
     raw(sql: string, bindings?: KnexType.RawBinding): KnexType.Raw {
         const trx = txStorage.getStore()
         return (trx ?? this.knex).raw(sql, bindings as KnexType.RawBinding)
     }
 
-    // ─── Destroy connection pool ───────────────────────────────────────────────
-
     async destroy(): Promise<void> {
         await this.knex.destroy()
     }
-
-    // ─── Expose underlying knex ────────────────────────────────────────────────
 
     getKnex(): KnexType {
         return this.knex
@@ -58,8 +47,7 @@ export class OeremPool {
 }
 
 // ─── TransactionAwareModel ────────────────────────────────────────────────────
-// Extends OeremModel but resolves knex at query time — uses the active
-// transaction if one exists in the current async context.
+// Overrides query() to inject the active transaction knex at query time.
 
 class TransactionAwareModel<T extends object, R extends object> extends OeremModel<T, R> {
     private readonly baseKnex: KnexType
@@ -79,62 +67,30 @@ class TransactionAwareModel<T extends object, R extends object> extends OeremMod
         return this.txStore.getStore() ?? this.baseKnex
     }
 
-    private scoped(): OeremModel<T, R> {
-        return new OeremModel<T, R>(this.getActiveKnex() as KnexType, this.def)
+    // All operations go through query(), so overriding this is enough.
+    override query(): OeremQueryBuilder<T, R> {
+        return new OeremQueryBuilder<T, R>(this.getActiveKnex() as KnexType, this.def)
     }
 
-    override async findMany(...args: Parameters<OeremModel<T, R>['findMany']>): Promise<T[]> {
-        return this.scoped().findMany(...args)
+    // insert and insertMany bypass query() so override them too.
+    override async insert(data: Partial<T>): Promise<T> {
+        const knex = this.getActiveKnex()
+        const { applyHashing } = await import('./processor.js')
+        const hashed = await applyHashing(data as Record<string, unknown>, this.def)
+        const pkColumn = this.getPrimaryKey()
+        const [id] = await knex(this.def.table).insert(hashed)
+        const row = await this.findById(id ?? (hashed[pkColumn] as number | string))
+        if (!row) throw new Error(`Insert succeeded but could not retrieve the created row.`)
+        return row
     }
 
-    override async findOne(...args: Parameters<OeremModel<T, R>['findOne']>): Promise<T | null> {
-        return this.scoped().findOne(...args)
-    }
-
-    override async findById(...args: Parameters<OeremModel<T, R>['findById']>): Promise<T | null> {
-        return this.scoped().findById(...args)
-    }
-
-    override async insert(...args: Parameters<OeremModel<T, R>['insert']>): Promise<T> {
-        return this.scoped().insert(...args)
-    }
-
-    override async insertMany(...args: Parameters<OeremModel<T, R>['insertMany']>): Promise<void> {
-        return this.scoped().insertMany(...args)
-    }
-
-    override async update(...args: Parameters<OeremModel<T, R>['update']>): Promise<number> {
-        return this.scoped().update(...args)
-    }
-
-    override async updateById(...args: Parameters<OeremModel<T, R>['updateById']>): Promise<T | null> {
-        return this.scoped().updateById(...args)
-    }
-
-    override async delete(...args: Parameters<OeremModel<T, R>['delete']>): Promise<number> {
-        return this.scoped().delete(...args)
-    }
-
-    override async deleteById(...args: Parameters<OeremModel<T, R>['deleteById']>): Promise<number> {
-        return this.scoped().deleteById(...args)
-    }
-
-    override async paginate(
-        ...args: Parameters<OeremModel<T, R>['paginate']>
-    ): ReturnType<OeremModel<T, R>['paginate']> {
-        return this.scoped().paginate(...args)
-    }
-
-    override async with<K extends keyof R>(rows: T[], ...relations: K[]): Promise<(T & Pick<R, K>)[]> {
-        return this.scoped().with(rows, ...relations)
-    }
-
-    override query(): KnexType.QueryBuilder {
-        return this.scoped().query()
-    }
-
-    override raw(sql: string, bindings?: KnexType.RawBinding): KnexType.Raw {
-        return this.scoped().raw(sql, bindings)
+    override async insertMany(rows: Partial<T>[]): Promise<void> {
+        const knex = this.getActiveKnex()
+        const { applyHashing } = await import('./processor.js')
+        const hashed = await Promise.all(
+            rows.map(r => applyHashing(r as Record<string, unknown>, this.def))
+        )
+        await knex(this.def.table).insert(hashed)
     }
 }
 

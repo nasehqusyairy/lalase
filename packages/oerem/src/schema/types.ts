@@ -87,8 +87,13 @@ export type AnyModelDef = ModelDef & { schema: Record<string, any> }
 
 // ─── Oerem Config ─────────────────────────────────────────────────────────────
 
+// ─── Knex Config (re-exported so developers don't need to import from knex) ───
+
+export type KnexConfig = import('knex').Knex.Config
+
+// ─── Oerem Config ─────────────────────────────────────────────────────────────
+
 export interface OeremConfig {
-    knex: import('knex').Knex.Config
     inputFolder: string
     outputFolder: string
     poolFile: string
