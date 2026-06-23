@@ -318,6 +318,40 @@ describe('query().with()', () => {
         expect(users[0].profile?.bio).toBe('Hello')
     })
 
+    it('with object literal — filters related rows via callback', async () => {
+        await Post.insert({ title: 'Draft', user_id: userId })
+        const users = await User.query()
+            .where('name', 'Alice')
+            .with({
+                posts: q => q.where('title', 'Post 1'),
+            })
+            .get()
+        expect(users[0].posts).toHaveLength(1)
+        expect(users[0].posts![0].title).toBe('Post 1')
+    })
+
+    it('with object literal — orderBy in callback', async () => {
+        const users = await User.query()
+            .where('name', 'Alice')
+            .with({
+                posts: q => q.orderBy('title', 'desc'),
+            })
+            .get()
+        expect(users[0].posts![0].title).toBe('Post 2')
+    })
+
+    it('with object literal — multiple relations with callbacks', async () => {
+        const users = await User.query()
+            .where('name', 'Alice')
+            .with({
+                posts: q => q.where('title', 'Post 1'),
+                profile: q => q.whereNotNull('bio'),
+            })
+            .get()
+        expect(users[0].posts).toHaveLength(1)
+        expect(users[0].profile?.bio).toBe('Hello')
+    })
+
     it('combined with where + orderBy + with', async () => {
         const users = await User.query()
             .where('is_active', true)

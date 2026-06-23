@@ -105,17 +105,24 @@ export class OeremModel<T extends object, R extends object = Record<string, neve
     // ─── Shorthand: with ──────────────────────────────────────────────────────
     // Fetch rows by PK and eager load relations in one step
 
-    async with<K extends keyof R>(
+    async with(
         rows: T[],
-        ...relations: K[]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        relations: (keyof R & string)[] | Record<keyof R & string, ((q: OeremQueryBuilder<any, any>) => OeremQueryBuilder<any, any>) | undefined>
     ): Promise<T[]> {
         if (rows.length === 0) return rows
         const pkCol = this.getPrimaryKey()
         const ids = rows.map(r => (r as Record<string, unknown>)[pkCol])
-        return this.query()
-            .whereIn(pkCol as keyof T & string, ids)
-            .with(...(relations as (keyof R & string)[]))
-            .get()
+        let q = this.query().whereIn(pkCol as keyof T & string, ids)
+
+        if (Array.isArray(relations)) {
+            q = q.with(...relations)
+        } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            q = q.with(relations as any)
+        }
+
+        return q.get()
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
