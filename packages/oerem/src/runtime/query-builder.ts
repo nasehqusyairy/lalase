@@ -324,14 +324,15 @@ export class OeremQueryBuilder<T extends object, R extends object = Record<strin
             }
 
             case 'belongsToMany': {
-                if (!rel.pivotTable || !rel.relatedForeignKey) {
+                if (!rel.pivotRef || !rel.relatedForeignKey) {
                     throw new Error(
-                        `belongsToMany relation "${key}" is missing pivotTable or relatedForeignKey.`
+                        `belongsToMany relation "${key}" is missing pivotRef or relatedForeignKey.`
                     )
                 }
                 const pkCol = this.getPrimaryKey()
                 const ids = [...new Set(rows.map(r => r[pkCol]))] as (string | number)[]
-                const pivotRows = await this.knex(rel.pivotTable)
+                const pivotDef = rel.pivotRef()
+                const pivotRows = await this.knex(pivotDef.table)
                     .whereIn(rel.foreignKey, ids) as Record<string, unknown>[]
                 const relatedIds = [
                     ...new Set(pivotRows.map(p => p[rel.relatedForeignKey!])),
@@ -339,13 +340,25 @@ export class OeremQueryBuilder<T extends object, R extends object = Record<strin
                 const relatedPkCol = getPrimaryKeyFromDef(relatedDef)
                 const related = await execRelated(relatedPkCol, relatedIds)
                 const relatedById = indexBy(related, relatedPkCol)
-                const grouped: Record<string, unknown[]> = {}
+                // Get all pivot schema fields for the pivot projection
+                const pivotFields = Object.keys(pivotDef.schema)
+                const grouped: Record<string, (Record<string, unknown> & { pivot: Record<string, unknown> })[]> = {}
                 for (const pivot of pivotRows) {
                     const ownerId = String(pivot[rel.foreignKey])
                     const relatedId = String(pivot[rel.relatedForeignKey!])
                     if (!grouped[ownerId]) grouped[ownerId] = []
                     const relatedRow = relatedById[relatedId]
-                    if (relatedRow) grouped[ownerId].push(relatedRow)
+                    if (relatedRow) {
+                        // Include all pivot fields (including FK columns)
+                        const pivotData: Record<string, unknown> = {}
+                        for (const pf of pivotFields) {
+                            pivotData[pf] = pivot[pf]
+                        }
+                        grouped[ownerId].push({
+                            ...relatedRow,
+                            pivot: pivotData,
+                        })
+                    }
                 }
                 for (const row of rows) {
                     row[key] = grouped[String(row[pkCol])] ?? []

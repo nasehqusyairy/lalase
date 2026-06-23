@@ -4,6 +4,8 @@
 import type { OeremQueryBuilder } from '@lalase/oerem'
 
 import type { TPost } from './post.types.js'
+import type { TRole } from './role.types.js'
+import type { TUserRole } from './userrole.types.js'
 
 export type TUser = {
   id: number
@@ -14,6 +16,7 @@ export type TUser = {
 
 export type RUser = {
   posts?: TPost[]
+  roles?: (TRole & { pivot: TUserRole })[]
 }
 
 export type QUser = OeremQueryBuilder<TUser, RUser>

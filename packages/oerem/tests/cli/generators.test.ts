@@ -24,7 +24,7 @@ const userModel: DiscoveredModel = {
         identifier: 'User',
         table: 'users',
         schema: {
-            id: field.integer().primary().build(),
+            id: field.id().build(),
             name: field.varchar(100).build(),
             email: field.varchar(255).nullable().unique().build(),
             is_active: field.boolean().default(true).build(),
@@ -43,9 +43,9 @@ const postModel: DiscoveredModel = {
         identifier: 'Post',
         table: 'posts',
         schema: {
-            id: field.integer().primary().build(),
+            id: field.id().build(),
             title: field.varchar(255).build(),
-            user_id: field.integer().foreign().constrained('users').cascadeOn('delete', 'update').build(),
+            user_id: field.foreignId().constrained('users').cascadeOn('delete', 'update').build(),
         },
     },
 }
@@ -141,7 +141,7 @@ describe('generateMigration', () => {
     it('migration generates increments for integer primary', () => {
         const filePath = generateMigration([userModel], migrationsDir)
         const content = readFileSync(filePath, 'utf-8')
-        expect(content).toContain("increments('id')")
+        expect(content).toContain("bigIncrements('id')")
     })
 
     it('migration generates varchar with length', () => {

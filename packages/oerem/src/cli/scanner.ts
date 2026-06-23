@@ -77,7 +77,7 @@ function serializeRelations(relations) {
   const result = {};
   for (const [key, rel] of Object.entries(relations)) {
     const resolved = rel.ref();
-    result[key] = {
+    const serialized = {
       type: rel.type,
       foreignKey: rel.foreignKey,
       pivotTable: rel.pivotTable,
@@ -85,6 +85,14 @@ function serializeRelations(relations) {
       // Store resolved ref identifier so we can reconstruct a lazy ref
       _refIdentifier: resolved.identifier,
     };
+
+    // Serialize pivotRef for belongsToMany relations
+    if (rel.pivotRef) {
+      const pivotResolved = rel.pivotRef();
+      serialized._pivotRefIdentifier = pivotResolved.identifier;
+    }
+
+    result[key] = serialized;
   }
   return result;
 }
@@ -121,6 +129,13 @@ process.stdout.write(JSON.stringify(serializable));
             delete rel._refIdentifier
             // Lazy ref returns a stub — enough for type generation and registry generation
             rel.ref = () => ({ identifier: refId, table: '', schema: {} })
+
+            // Reconstruct pivotRef for belongsToMany relations
+            if (rel._pivotRefIdentifier !== undefined) {
+                const pivotRefId = rel._pivotRefIdentifier as string
+                delete rel._pivotRefIdentifier
+                rel.pivotRef = () => ({ identifier: pivotRefId, table: '', schema: {} })
+            }
         }
     }
 

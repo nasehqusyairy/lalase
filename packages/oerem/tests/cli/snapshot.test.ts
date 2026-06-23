@@ -42,7 +42,7 @@ const userDef: ModelDef = {
     identifier: 'User',
     table: 'users',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         name: field.varchar(100).build(),
         email: field.varchar(255).nullable().unique().build(),
         password: field.varchar(255).hash().hidden().build(),
@@ -53,9 +53,9 @@ const postDef: ModelDef = {
     identifier: 'Post',
     table: 'posts',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         title: field.varchar(255).build(),
-        user_id: field.integer().foreign().constrained('users').cascadeOn('delete').build(),
+        user_id: field.foreignId().constrained('users').cascadeOn('delete').build(),
     },
     relations: {
         user: hasMany(() => userDef, 'user_id'),
@@ -93,7 +93,7 @@ describe('serializeModel', () => {
     })
 })
 
-// ─── createSnapshot ───────────────────────────────────────────────────────────
+// ─── createSnapshot ───��───────────────────────────────────────────────────────
 
 describe('createSnapshot', () => {
     it('creates snapshot with version and timestamp', () => {
@@ -178,7 +178,7 @@ describe('diffSchemas', () => {
             ...userDef,
             schema: {
                 ...userDef.schema,
-                age: field.integer().nullable().build(),
+                age: field.int().nullable().build(),
             },
         }
         const curr = createSnapshot([updatedUser])
@@ -268,7 +268,7 @@ describe('diffSchemas', () => {
             ...postDef,
             schema: {
                 ...postDef.schema,
-                user_id: field.integer().foreign().constrained('users').cascadeOn('delete', 'update').build(),
+                user_id: field.foreignId().constrained('users').cascadeOn('delete', 'update').build(),
             },
         }
         const curr = createSnapshot([updatedPost])
@@ -316,13 +316,13 @@ describe('generateDiffMigration', () => {
 
         const updatedUser: ModelDef = {
             ...userDef,
-            schema: { ...userDef.schema, age: field.integer().nullable().build() },
+            schema: { ...userDef.schema, age: field.int().nullable().build() },
         }
         const filePath = generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
         expect(filePath).not.toBeNull()
         const content = readFileSync(filePath!, 'utf-8')
         expect(content).toContain("alterTable('users'")
-        expect(content).toContain("integer('age')")
+        expect(content).toContain("specificType('age', 'int')")
     })
 
     it('generates dropColumn for removed column', () => {
@@ -366,7 +366,7 @@ describe('generateDiffMigration', () => {
 
         const updatedUser: ModelDef = {
             ...userDef,
-            schema: { ...userDef.schema, age: field.integer().nullable().build() },
+            schema: { ...userDef.schema, age: field.int().nullable().build() },
         }
         generateDiffMigration([toDiscovered(updatedUser)], tmpDir, migrationsDir)
 

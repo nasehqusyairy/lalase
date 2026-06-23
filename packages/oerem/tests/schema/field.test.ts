@@ -87,23 +87,48 @@ describe('field.text', () => {
     })
 })
 
-// ─── field.integer ────────────────────────────────────────────────────────────
+// ─── field.int ────────────────────────────────────────────────────────────
 
-describe('field.integer', () => {
-    it('creates an integer field', () => {
-        expect(build(field.integer()).type).toBe('integer')
+describe('field.int', () => {
+    it('creates an int field', () => {
+        expect(build(field.int()).type).toBe('int')
     })
 
     it('.primary() works', () => {
-        expect(build(field.integer().primary()).isPrimary).toBe(true)
+        expect(build(field.int().primary()).isPrimary).toBe(true)
+    })
+
+    it('.unsigned() works', () => {
+        expect(build(field.int().unsigned()).isUnsigned).toBe(true)
     })
 })
 
-// ─── field.bigInteger ─────────────────────────────────────────────────────────
+// ─── field.bigint ─────────────────────────────────────────────────────────
 
-describe('field.bigInteger', () => {
-    it('creates a bigInteger field', () => {
-        expect(build(field.bigInteger()).type).toBe('bigInteger')
+describe('field.bigint', () => {
+    it('creates a bigint field', () => {
+        expect(build(field.bigint()).type).toBe('bigint')
+    })
+})
+
+// ─── field.id ─────────────────────────────────────────────────────────
+
+describe('field.id', () => {
+    it('creates a bigint field with primary', () => {
+        const f = build(field.id())
+        expect(f.type).toBe('bigint')
+        expect(f.isPrimary).toBe(true)
+    })
+})
+
+// ─── field.foreignId ─────────────────────────────────────────────────────────
+
+describe('field.foreignId', () => {
+    it('creates a bigint field that is unsigned and foreign', () => {
+        const f = build(field.foreignId())
+        expect(f.type).toBe('bigint')
+        expect(f.isUnsigned).toBe(true)
+        expect(f.foreign?.isForeign).toBe(true)
     })
 })
 
@@ -190,49 +215,49 @@ describe('field.enum', () => {
 
 describe('.foreign() chain', () => {
     it('.foreign() returns a ForeignKeyBuilder', () => {
-        const builder = field.integer().foreign()
+        const builder = field.int().foreign()
         expect(builder).toBeInstanceOf(ForeignKeyBuilder)
     })
 
     it('.foreign() sets isForeign on meta', () => {
-        const f = field.integer().foreign().build()
+        const f = field.int().foreign().build()
         expect(f.foreign?.isForeign).toBe(true)
     })
 
     it('.constrained() returns a ConstrainedForeignKeyBuilder', () => {
-        const builder = field.integer().foreign().constrained('users')
+        const builder = field.int().foreign().constrained('users')
         expect(builder).toBeInstanceOf(ConstrainedForeignKeyBuilder)
     })
 
     it('.constrained() sets referencesTable and defaults column to id', () => {
-        const f = field.integer().foreign().constrained('users').build()
+        const f = field.int().foreign().constrained('users').build()
         expect(f.foreign?.referencesTable).toBe('users')
         expect(f.foreign?.referencesColumn).toBe('id')
     })
 
     it('.constrained() accepts a custom column', () => {
-        const f = field.integer().foreign().constrained('users', 'uuid').build()
+        const f = field.int().foreign().constrained('users', 'uuid').build()
         expect(f.foreign?.referencesColumn).toBe('uuid')
     })
 
     it('.cascadeOn() sets cascade events', () => {
-        const f = field.integer().foreign().constrained('users').cascadeOn('delete', 'update').build()
+        const f = field.int().foreign().constrained('users').cascadeOn('delete', 'update').build()
         expect(f.foreign?.cascadeOn).toEqual(['delete', 'update'])
     })
 
     it('.cascadeOn() with single event works', () => {
-        const f = field.integer().foreign().constrained('users').cascadeOn('delete').build()
+        const f = field.int().foreign().constrained('users').cascadeOn('delete').build()
         expect(f.foreign?.cascadeOn).toEqual(['delete'])
     })
 
     it('.foreign() without .constrained() cannot call .cascadeOn()', () => {
         // ForeignKeyBuilder does not have cascadeOn method
-        const builder = field.integer().foreign()
+        const builder = field.int().foreign()
         expect((builder as unknown as Record<string, unknown>).cascadeOn).toBeUndefined()
     })
 
     it('.foreign() supports .nullable() and .unique()', () => {
-        const f = field.integer().foreign().constrained('users').nullable().unique().build()
+        const f = field.int().foreign().constrained('users').nullable().unique().build()
         expect(f.isNullable).toBe(true)
         expect(f.isUnique).toBe(true)
     })
@@ -272,10 +297,11 @@ describe('relations', () => {
     })
 
     describe('belongsToMany', () => {
+        const fakePivotModel = { identifier: 'UserRole', table: 'user_roles', schema: {} }
         it('returns correct relation meta', () => {
-            const rel = belongsToMany(() => fakeModel2, 'user_roles', 'user_id', 'role_id')
+            const rel = belongsToMany(() => fakeModel2, () => fakePivotModel, 'user_id', 'role_id')
             expect(rel.type).toBe('belongsToMany')
-            expect(rel.pivotTable).toBe('user_roles')
+            expect(rel.pivotRef!().table).toBe('user_roles')
             expect(rel.foreignKey).toBe('user_id')
             expect(rel.relatedForeignKey).toBe('role_id')
             expect(rel.ref()).toBe(fakeModel2)
@@ -296,7 +322,7 @@ describe('relations', () => {
     })
 })
 
-// ─── Default bcrypt hasher ────────────────────────────────────────────────────
+// ─── Default bcrypt hasher ────────────────��───────────────────────────────────
 
 describe('default bcrypt hasher', () => {
     it('hashes a string asynchronously', async () => {

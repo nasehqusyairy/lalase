@@ -153,6 +153,15 @@ const defaultHasher: HashFn = async (value: string): Promise<string> => {
     return bcrypt.hash(value, 10)
 }
 
+// ─── Numeric Field Builder (supports unsigned) ──────────────────────────
+
+class NumericFieldBuilder extends FieldBuilder {
+    unsigned(): this {
+        this.meta.isUnsigned = true
+        return this
+    }
+}
+
 // ─── Field Factory ────────────────────────────────────────────────────────────
 
 export const field = {
@@ -167,17 +176,23 @@ export const field = {
         new FieldBuilder('uuid'),
 
     // Numeric types
-    integer: () =>
-        new FieldBuilder('integer'),
+    int: () =>
+        new NumericFieldBuilder('int'),
 
-    bigInteger: () =>
-        new FieldBuilder('bigInteger'),
+    bigint: () =>
+        new NumericFieldBuilder('bigint'),
+
+    id: () =>
+        new NumericFieldBuilder('bigint').primary(),
+
+    foreignId: () =>
+        new NumericFieldBuilder('bigint').unsigned().foreign(),
 
     decimal: (precision: number = 8, scale: number = 2) =>
-        new FieldBuilder('decimal', { precision, scale }),
+        new NumericFieldBuilder('decimal', { precision, scale }),
 
     float: () =>
-        new FieldBuilder('float'),
+        new NumericFieldBuilder('float'),
 
     // Boolean
     boolean: () =>

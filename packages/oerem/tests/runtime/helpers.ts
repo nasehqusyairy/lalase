@@ -20,7 +20,7 @@ export const userDef: ModelDef = {
     identifier: 'User',
     table: 'users',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         name: field.varchar(100).build(),
         email: field.varchar(255).nullable().unique().build(),
         password: field.varchar(255).hash().hidden().build(),
@@ -36,9 +36,9 @@ export const postDef: ModelDef = {
     identifier: 'Post',
     table: 'posts',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         title: field.varchar(255).build(),
-        user_id: field.integer().foreign().constrained('users').cascadeOn('delete').build(),
+        user_id: field.foreignId().constrained('users').cascadeOn('delete').build(),
     },
     relations: {
         user: belongsTo(() => userDef, 'user_id'),
@@ -49,9 +49,9 @@ export const profileDef: ModelDef = {
     identifier: 'Profile',
     table: 'profiles',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         bio: field.text().nullable().build(),
-        user_id: field.integer().build(),
+        user_id: field.bigint().build(),
     },
 }
 
@@ -59,15 +59,26 @@ export const roleDef: ModelDef = {
     identifier: 'Role',
     table: 'roles',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         name: field.varchar(100).build(),
+    },
+}
+
+export const userRoleDef: ModelDef = {
+    identifier: 'UserRole',
+    table: 'user_roles',
+    schema: {
+        id: field.id().build(),
+        user_id: field.bigint().build(),
+        role_id: field.bigint().build(),
+        assigned_at: field.varchar(100).nullable().build(),
     },
 }
 
     // Add belongsToMany to userDef after all defs are declared
     ; (userDef.relations as Record<string, unknown>).roles = belongsToMany(
         () => roleDef,
-        'user_roles',
+        () => userRoleDef,
         'user_id',
         'role_id',
     )

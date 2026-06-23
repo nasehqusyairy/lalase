@@ -33,6 +33,8 @@ function fieldToKnexCall(columnName: string, meta: FieldMeta): string {
 }
 
 function baseKnexCall(columnName: string, meta: FieldMeta): string {
+    const unsigned = meta.isUnsigned ? '.unsigned()' : ''
+
     switch (meta.type as SqlColumnType) {
         case 'varchar':
             return `string('${columnName}', ${meta.length ?? 255})`
@@ -40,15 +42,15 @@ function baseKnexCall(columnName: string, meta: FieldMeta): string {
         case 'text':
             return `text('${columnName}')`
 
-        case 'integer':
+        case 'int':
             return meta.isPrimary
                 ? `increments('${columnName}')`
-                : `integer('${columnName}')`
+                : `integer('${columnName}')${unsigned}`
 
-        case 'bigInteger':
+        case 'bigint':
             return meta.isPrimary
                 ? `bigIncrements('${columnName}')`
-                : `bigInteger('${columnName}')`
+                : `bigInteger('${columnName}')${unsigned}`
 
         case 'boolean':
             return `boolean('${columnName}')`
@@ -63,10 +65,10 @@ function baseKnexCall(columnName: string, meta: FieldMeta): string {
             return `timestamp('${columnName}')`
 
         case 'decimal':
-            return `decimal('${columnName}', ${meta.precision ?? 8}, ${meta.scale ?? 2})`
+            return `decimal('${columnName}', ${meta.precision ?? 8}, ${meta.scale ?? 2})${unsigned}`
 
         case 'float':
-            return `float('${columnName}')`
+            return `float('${columnName}')${unsigned}`
 
         case 'json':
             return `json('${columnName}')`
@@ -245,10 +247,14 @@ function applySchemaToTable(
                 col = table.string(colName, meta.length ?? 255); break
             case 'text':
                 col = table.text(colName); break
-            case 'integer':
-                col = meta.isPrimary ? table.increments(colName) : table.integer(colName); break
-            case 'bigInteger':
-                col = meta.isPrimary ? table.bigIncrements(colName) : table.bigInteger(colName); break
+            case 'int':
+                col = meta.isPrimary ? table.increments(colName) : table.integer(colName)
+                if (meta.isUnsigned) col = col.unsigned()
+                break
+            case 'bigint':
+                col = meta.isPrimary ? table.bigIncrements(colName) : table.bigInteger(colName)
+                if (meta.isUnsigned) col = col.unsigned()
+                break
             case 'boolean':
                 col = table.boolean(colName); break
             case 'date':
@@ -258,9 +264,13 @@ function applySchemaToTable(
             case 'timestamp':
                 col = table.timestamp(colName); break
             case 'decimal':
-                col = table.decimal(colName, meta.precision, meta.scale); break
+                col = table.decimal(colName, meta.precision, meta.scale)
+                if (meta.isUnsigned) col = col.unsigned()
+                break
             case 'float':
-                col = table.float(colName); break
+                col = table.float(colName)
+                if (meta.isUnsigned) col = col.unsigned()
+                break
             case 'json':
                 col = table.json(colName); break
             case 'jsonb':

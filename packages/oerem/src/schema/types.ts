@@ -3,8 +3,8 @@
 export type SqlColumnType =
     | 'varchar'
     | 'text'
-    | 'integer'
-    | 'bigInteger'
+    | 'int'
+    | 'bigint'
     | 'boolean'
     | 'date'
     | 'dateTime'
@@ -46,6 +46,9 @@ export interface FieldMeta {
     precision?: number
     scale?: number
 
+    // integer/bigInteger/decimal/float args
+    isUnsigned?: boolean
+
     // constraints
     isPrimary: boolean
     isNullable: boolean
@@ -69,7 +72,7 @@ export interface RelationMeta {
     ref: () => AnyModelDef
     foreignKey: string
     // belongsToMany only
-    pivotTable?: string
+    pivotRef?: () => AnyModelDef
     relatedForeignKey?: string
 }
 
@@ -104,7 +107,7 @@ export interface OeremConfig {
 
 type SqlTypeToTs<T extends SqlColumnType> =
     T extends 'varchar' | 'text' | 'uuid' ? string :
-    T extends 'integer' | 'bigInteger' | 'decimal' | 'float' ? number :
+    T extends 'int' | 'bigint' | 'decimal' | 'float' ? number :
     T extends 'boolean' ? boolean :
     T extends 'date' | 'dateTime' | 'timestamp' ? Date :
     T extends 'json' | 'jsonb' ? unknown :

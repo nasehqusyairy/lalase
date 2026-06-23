@@ -11,6 +11,10 @@ import { createTestKnex, setupSchema, userDef, postDef, profileDef, roleDef } fr
 type Post = { id: number; title: string; user_id: number; user?: User | null }
 type Profile = { id: number; bio: string | null; user_id: number }
 type Role = { id: number; name: string }
+type UserRole = { id: number; user_id: number; role_id: number; assigned_at: string | null }
+
+// Role with pivot: intersection of Role and { pivot: UserRole }
+type RoleWithPivot = Role & { pivot: UserRole }
 
 type User = {
     id: number
@@ -21,10 +25,11 @@ type User = {
     // relations — already part of T as generated
     posts?: Post[]
     profile?: Profile | null
-    roles?: Role[]
+    // roles now includes pivot data
+    roles?: RoleWithPivot[]
 }
 
-type UserR = { posts: Post[]; profile: Profile | null; roles: Role[] }
+type UserR = { posts: Post[]; profile: Profile | null; roles: RoleWithPivot[] }
 type PostR = { user: User | null }
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
@@ -310,6 +315,9 @@ describe('query().with()', () => {
         const users = await User.query().where('name', 'Alice').with('roles').get()
         expect(users[0].roles).toHaveLength(1)
         expect(users[0].roles![0].name).toBe('Admin')
+        // Verify pivot data is included
+        expect(users[0].roles![0].pivot).toBeDefined()
+        expect(users[0].roles![0].pivot!.user_id).toBe(userId)
     })
 
     it('loads multiple relations', async () => {

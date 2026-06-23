@@ -41,9 +41,9 @@ export class PivotRelation<TRelated extends object, RRelated extends object = Re
             )
         }
 
-        if (!relMeta.pivotTable || !relMeta.relatedForeignKey) {
+        if (!relMeta.pivotRef || !relMeta.relatedForeignKey) {
             throw new Error(
-                `belongsToMany relation is missing "pivotTable" or "relatedForeignKey".`
+                `belongsToMany relation is missing "pivotRef" or "relatedForeignKey".`
             )
         }
 
@@ -57,7 +57,7 @@ export class PivotRelation<TRelated extends object, RRelated extends object = Re
     // ─── Pivot table helpers ──────────────────────────────────────────────────
 
     private get pivotTable(): string {
-        return this.relMeta.pivotTable!
+        return this.relMeta.pivotRef!().table
     }
 
     private get fk(): string {

@@ -17,8 +17,8 @@ function sqlBaseType(type: SqlColumnType, meta: FieldMeta): string {
         case 'uuid':
             return 'string'
 
-        case 'integer':
-        case 'bigInteger':
+        case 'int':
+        case 'bigint':
         case 'decimal':
         case 'float':
             return 'number'
@@ -54,12 +54,21 @@ function relationToTs(rel: RelationMeta, allModels: DiscoveredModel[]): string {
 
     // Find the related model to get its T type name
     const found = allModels.find(m => m.def.identifier === relatedIdentifier)
-    if (!found) {
-        // Fallback: derive T name from identifier
-        return relationWrapper(rel.type, `T${relatedIdentifier}`)
+    const relatedTypeName = found ? `T${found.def.identifier}` : `T${relatedIdentifier}`
+
+    // Handle belongsToMany with pivot intersection type
+    if (rel.type === 'belongsToMany' && rel.pivotRef) {
+        const pivotDef = rel.pivotRef()
+        const pivotIdentifier = pivotDef.identifier
+        const pivotFound = allModels.find(m => m.def.identifier === pivotIdentifier)
+        const pivotTypeName = pivotFound ? `T${pivotFound.def.identifier}` : `T${pivotIdentifier}`
+
+        // For belongsToMany with pivot, wrap intersection in parentheses before adding array wrapper
+        const intersectionType = `(${relatedTypeName} & { pivot: ${pivotTypeName} })`
+        return `${intersectionType}[]`
     }
 
-    return relationWrapper(rel.type, `T${found.def.identifier}`)
+    return relationWrapper(rel.type, relatedTypeName)
 }
 
 function relationWrapper(type: RelationMeta['type'], typeName: string): string {
@@ -96,6 +105,14 @@ export function generateTypeFile(
             const relatedId = rel.ref().identifier
             if (relatedId !== id) {
                 relatedIdentifiers.add(relatedId)
+            }
+
+            // Also collect pivot types for belongsToMany relations
+            if (rel.type === 'belongsToMany' && rel.pivotRef) {
+                const pivotId = rel.pivotRef().identifier
+                if (pivotId !== id) {
+                    relatedIdentifiers.add(pivotId)
+                }
             }
         }
 

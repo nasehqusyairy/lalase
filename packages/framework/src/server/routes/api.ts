@@ -8,7 +8,7 @@ route.get('/', async ({ response }) => {
 }).name('api.index');
 
 route.get('/users', async ({ response }) => {
-    const users = await User.query().get()
+    const users = await User.query().with('posts', 'roles').get()
     return response.json({ data: { users } });
 }).name('api.users');
 

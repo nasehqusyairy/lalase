@@ -9,14 +9,14 @@ const def: ModelDef = {
     identifier: 'User',
     table: 'users',
     schema: {
-        id: field.integer().primary().build(),
+        id: field.id().build(),
         name: field.varchar().build(),
         password: field.varchar().hash().hidden().build(),
         secret: field.varchar().hidden().build(),
     },
 }
 
-// ─── applyHiddenFields ────────────────────────────────────────────────────────
+// ─── applyHiddenFields ──────────────────────────────────────────────────────────────
 
 describe('applyHiddenFields', () => {
     it('makes hidden fields non-enumerable', () => {
@@ -107,7 +107,7 @@ describe('applyHashing', () => {
             identifier: 'User',
             table: 'users',
             schema: {
-                id: field.integer().primary().build(),
+                id: field.id().build(),
                 password: field.varchar().hash(customHash).build(),
             },
         }
@@ -130,7 +130,7 @@ describe('applyHashing', () => {
             identifier: 'User',
             table: 'users',
             schema: {
-                id: field.integer().primary().build(),
+                id: field.id().build(),
                 password: field.varchar().nullable().hash(customHash).build(),
             },
         }
@@ -145,7 +145,7 @@ describe('applyHashing', () => {
             identifier: 'User',
             table: 'users',
             schema: {
-                id: field.integer().primary().build(),
+                id: field.id().build(),
                 password: field.varchar().hash().build(),
             },
         }
@@ -169,7 +169,7 @@ describe('applyHashing', () => {
             identifier: 'Cred',
             table: 'creds',
             schema: {
-                id: field.integer().primary().build(),
+                id: field.id().build(),
                 pin: field.varchar().hash(hashA).build(),
                 token: field.varchar().hash(hashB).build(),
             },
