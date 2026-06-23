@@ -68,10 +68,10 @@ export function resolveAssets() {
     };
 }
 
-export async function viteMiddleware({ res, req, next }: MiddlewareArg) {
+export async function viteMiddleware({ request, response, next }: MiddlewareArg) {
     if (APP_DEBUG) {
         await createViteServerIfNotExists();
-        return vite.middlewares(req, res, next);
+        return vite.middlewares(request, response, next);
     }
     next();
 }

@@ -32,7 +32,7 @@ export class RouteDefinition {
 
     middleware(...middleware: Middleware[]) {
         const expressMiddleware = middleware.map(m =>
-            ((req, res, next) => m({ req, res, next })) as RequestHandler
+            ((request, response, next) => m({ request, response, next })) as RequestHandler
         );
         this.middlewares.push(...expressMiddleware);
         return this;
@@ -66,9 +66,9 @@ export class RouteBuilder {
     }
 
     private handler(action: ControllerAction) {
-        return (req: Request, res: Response, next: NextFunction) => {
+        return (request: Request, response: Response, next: NextFunction) => {
             try {
-                return action({ req, res });
+                return action({ request, response });
             } catch (err) {
                 next(err);
             }
@@ -129,7 +129,7 @@ export class RouteBuilder {
 
     middleware(...middleware: Middleware[]) {
         this.pendingMeta.middleware.push(
-            ...middleware.map(m => ((req, res, next) => m({ req, res, next })) as RequestHandler)
+            ...middleware.map(m => ((request, response, next) => m({ request, response, next })) as RequestHandler)
         );
         return this;
     }

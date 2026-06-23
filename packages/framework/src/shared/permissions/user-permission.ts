@@ -1,5 +1,7 @@
-import type { TUser } from "@shared/types/models/user";
+import type { TUser } from "@shared/types/models/user.types.js";
 
-export function canReadUsers(user?: TUser) {
+type AuthUser = { id: number };
+
+export function canReadUsers(user?: AuthUser) {
     return user?.id === 1;
 }

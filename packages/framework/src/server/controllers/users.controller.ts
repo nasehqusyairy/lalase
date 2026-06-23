@@ -13,8 +13,8 @@ export default {
         return view('users/index', { users })
     },
 
-    async create({ res }) {
-        return res.json({ message: 'User created successfully' })
+    async create({ response }) {
+        return response.json({ message: 'User created successfully' })
     }
 
 } satisfies Controller

@@ -9,57 +9,57 @@ import path from 'path';
 import { viteMiddleware } from '@server/core/vite';
 
 export default {
-    requestContextMiddleware: ({ req, res, next }) =>
-        context.run({ req, res }, next),
+    requestContextMiddleware: ({ request, response, next }) =>
+        context.run({ request, response }, next),
 
-    staticMiddleware: ({ req, res, next }) =>
-        express.static(path.resolve(APP_STATIC), { index: false })(req, res, next),
+    staticMiddleware: ({ request, response, next }) =>
+        express.static(path.resolve(APP_STATIC), { index: false })(request, response, next),
 
-    jsonParserMiddleware: ({ req, res, next }) =>
-        express.json()(req, res, next),
+    jsonParserMiddleware: ({ request, response, next }) =>
+        express.json()(request, response, next),
 
-    urlencodedParserMiddleware: ({ req, res, next }) =>
-        express.urlencoded({ extended: true })(req, res, next),
+    urlencodedParserMiddleware: ({ request, response, next }) =>
+        express.urlencoded({ extended: true })(request, response, next),
 
-    multipartParserMiddleware: ({ req, res, next }) =>
-        multer().any()(req, res, next),
+    multipartParserMiddleware: ({ request, response, next }) =>
+        multer().any()(request, response, next),
 
     serveMiddleware: async (arg) =>
         viteMiddleware(arg),
 
-    sessionMiddleware: ({ req, res, next }) =>
-        session(req, res, () => {
-            if (req.hostname === 'localhost' || req.hostname === '127.0.0.1') {
-                if (req.session && req.session.cookie) {
-                    req.session.cookie.secure = false;
+    sessionMiddleware: ({ request, response, next }) =>
+        session(request, response, () => {
+            if (request.hostname === 'localhost' || request.hostname === '127.0.0.1') {
+                if (request.session && request.session.cookie) {
+                    request.session.cookie.secure = false;
                 }
             }
             next();
         }),
 
-    flashMiddleware: ({ req, res, next }) => {
-        res.locals = { ...res.locals, flash: req.session.flash };
-        if (req.session) {
-            delete req.session.flash;
+    flashMiddleware: ({ request, response, next }) => {
+        response.locals = { ...response.locals, flash: request.session.flash };
+        if (request.session) {
+            delete request.session.flash;
         }
         next();
     },
-    inertiaMiddleware: async ({ req, res, next }) => {
-        const requestVersion = req.headers['x-inertia-version'] as string | undefined;
+    inertiaMiddleware: async ({ request, response, next }) => {
+        const requestVersion = request.headers['x-inertia-version'] as string | undefined;
         if (requestVersion && requestVersion !== APP_VERSION) {
-            res.status(409);
-            res.setHeader('X-Inertia-Version', APP_VERSION);
-            return res.json({ error: 'Version mismatch', status: 409 });
+            response.status(409);
+            response.setHeader('X-Inertia-Version', APP_VERSION);
+            return response.json({ error: 'Version mismatch', status: 409 });
         }
         next();
     },
-    redirectMiddleware: async ({ req, res, next }) => {
-        const isInertia = req.headers['x-inertia'] === 'true';
-        const isPostMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
+    redirectMiddleware: async ({ request, response, next }) => {
+        const isInertia = request.headers['x-inertia'] === 'true';
+        const isPostMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
         if (isInertia && isPostMethod) {
-            const originalRedirect = res.redirect.bind(res);
-            res.redirect = function (statusOrUrl: number | string, url?: string) {
+            const originalRedirect = response.redirect.bind(response);
+            response.redirect = function (statusOrUrl: number | string, url?: string) {
                 let status: number;
                 let redirectUrl: string;
 
@@ -80,7 +80,7 @@ export default {
         next();
     },
 
-    notFoundMiddleware: ({ req, res }) => view('error', {
+    notFoundMiddleware: ({ request, response }) => view('error', {
         status: 404,
         message: 'Halaman tidak ditemukan'
     })

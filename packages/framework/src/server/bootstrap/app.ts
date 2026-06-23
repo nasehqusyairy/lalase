@@ -6,11 +6,11 @@ import type { ErrorHandler, Middleware } from '@server/types';
 import middlewareRegistry from './middleware';
 
 function toRequestHandler(m: Middleware): express.RequestHandler {
-    return (req, res, next) => m({ req, res, next });
+    return (request, response, next) => m({ request, response, next });
 }
 
 function toErrorHandler(eh: ErrorHandler): express.ErrorRequestHandler {
-    return ((err, req, res, next) => eh({ err, req, res, next }));
+    return ((err, request, response, next) => eh({ err, request, response, next }));
 }
 
 export function createApp(): express.Application {

@@ -45,15 +45,15 @@ export async function saveSession(req: e.Request): Promise<void> {
 }
 
 export async function setSession(data: Record<string, unknown>) {
-    const { req } = context.getStore()!;
-    Object.assign(req.session, data);
-    await saveSession(req);
+    const { request } = context.getStore()!;
+    Object.assign(request.session, data);
+    await saveSession(request);
 }
 
 export async function setFlash(data: Record<string, unknown>) {
-    const { req } = context.getStore()!;
-    req.session.flash = { ...req.session.flash, ...data };
-    await saveSession(req);
+    const { request } = context.getStore()!;
+    request.session.flash = { ...request.session.flash, ...data };
+    await saveSession(request);
 }
 
 type Credential = {
@@ -90,12 +90,12 @@ export async function setAuth(credential: Credential & { user?: AuthData }) {
 }
 
 export function getAuth() {
-    const { req } = context.getStore()!;
-    return req.session.auth as AuthData | undefined;
+    const { request } = context.getStore()!;
+    return request.session.auth as AuthData | undefined;
 }
 
 export async function destroyAuth() {
-    const { req } = context.getStore()!;
-    delete req.session.auth;
-    await saveSession(req);
+    const { request } = context.getStore()!;
+    delete request.session.auth;
+    await saveSession(request);
 }

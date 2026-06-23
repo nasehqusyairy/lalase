@@ -24,8 +24,8 @@ export type ViteManifestEntry = {
 export type ViteManifest = Record<string, ViteManifestEntry>;
 
 export type ControllerActionArg = {
-    req: Request;
-    res: Response;
+    request: Request;
+    response: Response;
 };
 
 export type ControllerAction = (ctx: ControllerActionArg) => Promise<express.Response> | express.Response;
@@ -44,16 +44,16 @@ export type MiddlewareRegistry = {
 
 export type ErrorHandlerArg = {
     err: Error;
-    req: Request;
-    res: Response;
+    request: Request;
+    response: Response;
     next: NextFunction;
 };
 
 export type ErrorHandler = (ctx: ErrorHandlerArg) => void;
 
 export type MiddlewareArg = {
-    req: Request;
-    res: Response;
+    request: Request;
+    response: Response;
     next: NextFunction;
 };
 

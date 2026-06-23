@@ -3,13 +3,13 @@ import { APP_DEBUG } from '@server/config/app';
 import type { ErrorHandler } from '@server/types';
 import { HttpException } from '../definitions/http-exception';
 
-export default (({ err, res, next, }) => {
-    if (res.headersSent) {
+export default (({ err, response, next, }) => {
+    if (response.headersSent) {
         return next(err);
     }
 
     if (err instanceof HttpException) {
-        return res.status(err.status).json({
+        return response.status(err.status).json({
             message: err.message,
         });
     }
@@ -17,7 +17,7 @@ export default (({ err, res, next, }) => {
     console.error('SERVER ERROR:', err);
 
     if (!APP_DEBUG || !err.stack) {
-        return res.status(500).render('error', {
+        return response.status(500).render('error', {
             message: 'Terjadi kesalahan pada server',
         });
     }
@@ -41,11 +41,11 @@ export default (({ err, res, next, }) => {
         }
     }
 
-    // return res.status(500).render('error', {
+    // return response.status(500).render('error', {
     //     message: err.message,
     //     filePath,
     //     lineNumber,
     //     fileContent,
     // });
-    return res.status(500);
+    return response.status(500);
 }) as ErrorHandler;

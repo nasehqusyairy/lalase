@@ -8,8 +8,8 @@ export default {
         return view('auth/login', {});
     },
 
-    async login({ req }) {
-        await setAuth(req.body)
+    async login({ request }) {
+        await setAuth(request.body)
         return redirect('/');
     },
 
