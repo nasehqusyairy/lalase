@@ -103,5 +103,6 @@ export async function setupSchema(knex: KnexType): Promise<void> {
     await knex.schema.createTable('user_roles', (t) => {
         t.integer('user_id').notNullable()
         t.integer('role_id').notNullable()
+        t.string('assigned_at').nullable()
     })
 }

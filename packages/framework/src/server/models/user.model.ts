@@ -6,7 +6,7 @@ export default {
     table: 'users',
     schema: {
         id: field.bigInteger().primary().build(),
-        name: field.varchar().build(),
+        name: field.varchar(50).build(),
         email: field.varchar().unique().build(),
         password: field.varchar().hash().hidden().build()
     },

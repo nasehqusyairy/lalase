@@ -2,6 +2,7 @@ import type { Knex } from 'knex'
 import type { ModelDef } from '../schema/types.js'
 import { applyHashing } from './processor.js'
 import { OeremQueryBuilder, getPrimaryKeyFromDef, type PaginateResult, type OrderDirection } from './query-builder.js'
+import { PivotRelation, type PivotId } from './pivot.js'
 
 // ─── OeremModel ───────────────────────────────────────────────────────────────
 // T — full schema type (already includes R via intersection in generated types)
@@ -123,6 +124,26 @@ export class OeremModel<T extends object, R extends object = Record<string, neve
         }
 
         return q.get()
+    }
+
+    // ─── through ──────────────────────────────────────────────────────────────
+    // Returns a PivotRelation for managing a belongsToMany pivot table.
+    //
+    // @example
+    // await User.through('roles', userId).attach(roleId)
+    // await User.through('roles', userId).sync([roleId1, roleId2])
+
+    through<TRelated extends object = object, RRelated extends object = Record<string, never>>(
+        relation: keyof R & string,
+        ownerId: PivotId,
+    ): PivotRelation<TRelated, RRelated> {
+        const relMeta = this.def.relations?.[relation]
+        if (!relMeta) {
+            throw new Error(
+                `Relation "${relation}" not found on model "${this.def.identifier}".`
+            )
+        }
+        return new PivotRelation<TRelated, RRelated>(this.knex, this.def, relMeta, ownerId)
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
