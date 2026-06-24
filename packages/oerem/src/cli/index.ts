@@ -7,6 +7,7 @@ import { generateTypes } from './generators/types.generator.js'
 import { generateRegistry } from './generators/registry.generator.js'
 import { simulateSchema } from './generators/migration.generator.js'
 import { generateDiffMigration, saveSnapshot } from './generators/diff.generator.js'
+import { generateSeeder, runSeeders } from './generators/seed.generator.js'
 
 // ─── CLI ──────────────────────────────────────────────────────────────────────
 
@@ -14,8 +15,10 @@ const COMMANDS = [
     'generate:types',
     'generate:registry',
     'generate:migration',
+    'generate:seeder',
     'migrate',
     'rollback',
+    'seed',
     'simulate',
 ] as const
 
@@ -39,6 +42,7 @@ async function main() {
         const inputFolder = resolve(cwd, config.inputFolder)
         const outputFolder = resolve(cwd, config.outputFolder)
         const migrationsFolder = resolve(cwd, config.migrationsFolder)
+        const seedsFolder = resolve(cwd, config.seedsFolder)
 
         switch (command) {
 
@@ -76,6 +80,25 @@ async function main() {
                 const name = args[0] ?? 'schema_update'
                 generateDiffMigration(models, cwd, migrationsFolder, name)
                 console.log(`\n  Done.\n`)
+                break
+            }
+
+            // ── generate:seeder ─────────────────────────────────────────────────
+            case 'generate:seeder': {
+                const name = args[0]
+                if (!name) {
+                    console.warn('  Usage: oerem generate:seeder <name>')
+                    break
+                }
+                generateSeeder(seedsFolder, name)
+                console.log(`\n  Done.\n`)
+                break
+            }
+
+            // ── seed ─────────────────────────────────────────────────────────────────
+            case 'seed': {
+                await runSeeders(resolve(cwd, config.poolFile), seedsFolder)
+                console.log()
                 break
             }
 
@@ -135,11 +158,7 @@ async function main() {
     }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-// ─── Load knex config from pool file via tsx ──────────────────────────────────
-// The pool file exports an OeremPool instance. We extract its knex config
-// by reading the pool file's default export knex configuration via child process.
+// ─── Helpers ──────────────────────────────────────────────────────────────────────
 
 async function loadKnexConfigFromPool(
     poolFile: string,
@@ -148,7 +167,6 @@ async function loadKnexConfigFromPool(
     const { createRequire } = await import('node:module')
     const { existsSync } = await import('node:fs')
 
-    // Resolve .ts extension if not provided
     const resolved = existsSync(poolFile)
         ? poolFile
         : existsSync(`${poolFile}.ts`)
@@ -204,14 +222,16 @@ function printHelp() {
 oerem — model-driven ORM for TypeScript
 
 Usage:
-  oerem <command> [options]
+  oerem <command> [options>
 
 Commands:
   generate:types       Generate TypeScript types from model schemas
   generate:registry    Generate index.ts model registry in input folder
   generate:migration   Generate a Knex migration file from model schemas
+  generate:seeder     Generate a seeder file
   migrate              Run pending migrations
   rollback             Rollback the last migration batch
+  seed                 Run seed files to populate database
   simulate             Sync tables to DB directly without creating a migration
 `)
 }

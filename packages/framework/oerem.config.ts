@@ -5,4 +5,5 @@ export default {
     outputFolder: './src/shared/types/models',
     migrationsFolder: './src/server/database/migrations',
     poolFile: './src/server/core/pool.ts',
+    seedsFolder: './src/server/database/seeders',
 } satisfies OeremConfig

@@ -44,7 +44,7 @@ export async function getOeremConfig(cwd: string = process.cwd()): Promise<Oerem
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 function validateConfig(config: Record<string, unknown>, configPath: string): void {
-    const required = ['inputFolder', 'outputFolder', 'poolFile', 'migrationsFolder'] as const
+    const required = ['inputFolder', 'outputFolder', 'poolFile', 'migrationsFolder', 'seedsFolder'] as const
 
     for (const key of required) {
         if (config[key] === undefined || config[key] === null) {
@@ -69,5 +69,9 @@ function validateConfig(config: Record<string, unknown>, configPath: string): vo
 
     if (typeof config.migrationsFolder !== 'string') {
         throw new Error(`${CONFIG_FILENAME}: "migrationsFolder" must be a string.`)
+    }
+
+    if (typeof config.seedsFolder !== 'string') {
+        throw new Error(`${CONFIG_FILENAME}: "seedsFolder" must be a string.`)
     }
 }

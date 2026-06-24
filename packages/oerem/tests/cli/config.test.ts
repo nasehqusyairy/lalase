@@ -48,7 +48,8 @@ describe('getOeremConfig', () => {
       inputFolder: 123,
       outputFolder: './types',
       poolFile: './pool.ts',
-      migrationsFolder: './migrations'
+      migrationsFolder: './migrations',
+      seedsFolder: './seeds'
     }`)
         await expect(getOeremConfig(tmpDir)).rejects.toThrow('"inputFolder" must be a string')
     })
@@ -58,7 +59,8 @@ describe('getOeremConfig', () => {
       inputFolder: './models',
       outputFolder: './types',
       poolFile: './pool.ts',
-      migrationsFolder: './migrations'
+      migrationsFolder: './migrations',
+      seedsFolder: './seeds'
     }`)
 
         const config = await getOeremConfig(tmpDir)
@@ -66,5 +68,6 @@ describe('getOeremConfig', () => {
         expect(config.outputFolder).toBe('./types')
         expect(config.poolFile).toBe('./pool.ts')
         expect(config.migrationsFolder).toBe('./migrations')
+        expect(config.seedsFolder).toBe('./seeds')
     })
 })
