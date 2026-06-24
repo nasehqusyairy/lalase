@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-24T05:01:06.187Z",
+  "models": [
+    {
+      "identifier": "Post",
+      "table": "posts",
+      "schema": {
+        "id": {
+          "type": "bigint",
+          "isPrimary": true,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false
+        },
+        "title": {
+          "type": "varchar",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "length": 255
+        },
+        "body": {
+          "type": "text",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false
+        },
+        "user_id": {
+          "type": "bigint",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "isUnsigned": true,
+          "foreign": {
+            "isForeign": true,
+            "referencesTable": "users",
+            "referencesColumn": "id",
+            "cascadeOn": [
+              "delete",
+              "update"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "identifier": "Role",
+      "table": "roles",
+      "schema": {
+        "id": {
+          "type": "bigint",
+          "isPrimary": true,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false
+        },
+        "name": {
+          "type": "varchar",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "length": 255
+        }
+      }
+    },
+    {
+      "identifier": "UserRole",
+      "table": "user_role",
+      "schema": {
+        "id": {
+          "type": "bigint",
+          "isPrimary": true,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false
+        },
+        "user_id": {
+          "type": "bigint",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "isUnsigned": true,
+          "foreign": {
+            "isForeign": true,
+            "referencesTable": "users",
+            "referencesColumn": "id",
+            "cascadeOn": [
+              "delete",
+              "update"
+            ]
+          }
+        },
+        "role_id": {
+          "type": "bigint",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "isUnsigned": true,
+          "foreign": {
+            "isForeign": true,
+            "referencesTable": "roles",
+            "referencesColumn": "id",
+            "cascadeOn": [
+              "delete",
+              "update"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "identifier": "User",
+      "table": "users",
+      "schema": {
+        "id": {
+          "type": "bigint",
+          "isPrimary": true,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false
+        },
+        "name": {
+          "type": "varchar",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": false,
+          "length": 50
+        },
+        "email": {
+          "type": "varchar",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": true,
+          "isHidden": false,
+          "length": 255
+        },
+        "password": {
+          "type": "varchar",
+          "isPrimary": false,
+          "isNullable": false,
+          "isUnique": false,
+          "isHidden": true,
+          "length": 255
+        }
+      }
+    }
+  ]
+}

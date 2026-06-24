@@ -40,6 +40,87 @@ export function loadSnapshot(cwd: string): SchemaSnapshot | null {
     }
 }
 
+// ─── Sort table diffs by dependency ────────────────────────────────────────────
+
+/**
+ * Sorts table diffs by their FK dependency level.
+ * Tables that are created first (no FK) come first.
+ * Tables being dropped come last in reverse order.
+ */
+function sortTableDiffsByDependency(tableDiffs: TableDiff[]): TableDiff[] {
+    if (tableDiffs.length <= 1) return tableDiffs
+
+    // Get all table names from the diffs
+    const tableNames = new Set<string>()
+    for (const td of tableDiffs) {
+        tableNames.add(td.table)
+    }
+
+    // Build dependency map: referenced table -> tables that reference it
+    const dependentsMap = new Map<string, string[]>()
+
+    for (const td of tableDiffs) {
+        for (const cc of td.columnChanges) {
+            if (cc.after?.foreign?.referencesTable) {
+                const refTable = cc.after.foreign.referencesTable
+                if (tableNames.has(refTable)) {
+                    const deps = dependentsMap.get(refTable) || []
+                    deps.push(td.table)
+                    dependentsMap.set(refTable, deps)
+                }
+            }
+        }
+    }
+
+    // Separate created/altered from dropped
+    const toCreateOrAlter = tableDiffs.filter(td => td.changeType !== 'dropped')
+    const toDrop = tableDiffs.filter(td => td.changeType === 'dropped')
+
+    // Calculate levels for created/altered tables
+    const levels = new Map<string, number>()
+
+    function calculateLevel(table: string, seen: Set<string>): number {
+        if (levels.has(table)) return levels.get(table)!
+        if (seen.has(table)) return 0
+
+        seen.add(table)
+        let maxLevel = 0
+
+        const dependents = dependentsMap.get(table) || []
+        for (const dependent of dependents) {
+            if (seen.has(dependent)) continue
+            const level = calculateLevel(dependent, new Set(seen))
+            maxLevel = Math.max(maxLevel, level + 1)
+        }
+
+        levels.set(table, maxLevel)
+        return maxLevel
+    }
+
+    // Calculate levels
+    for (const td of toCreateOrAlter) {
+        calculateLevel(td.table, new Set())
+    }
+
+    // Sort created/altered by level, then by table name for stability
+    const sorted = [...toCreateOrAlter].sort((a, b) => {
+        const levelA = levels.get(a.table) ?? 0
+        const levelB = levels.get(b.table) ?? 0
+        if (levelA !== levelB) return levelA - levelB
+        return a.table.localeCompare(b.table)
+    })
+
+    // Dropped tables in reverse order (drop dependent first, then referenced)
+    const droppedSorted = [...toDrop].sort((a, b) => {
+        const levelA = levels.get(a.table) ?? 0
+        const levelB = levels.get(b.table) ?? 0
+        if (levelA !== levelB) return levelB - levelA // Reverse!
+        return b.table.localeCompare(a.table)
+    })
+
+    return [...sorted, ...droppedSorted]
+}
+
 // ─── Diff migration generator ─────────────────────────────────────────────────
 
 export function generateDiffMigration(
@@ -78,12 +159,42 @@ export function generateDiffMigration(
         }
     }
 
-    const content = buildDiffMigrationContent(diff.tableDiffs)
-    const filePath = writeMigrationFile(content, migrationsFolder, name)
+    // Sort by dependency and generate one file per table
+    const sortedDiffs = sortTableDiffsByDependency(diff.tableDiffs)
+    const baseTime = baseTimestamp()
+    let firstFilePath: string | undefined
+
+    for (let i = 0; i < sortedDiffs.length; i++) {
+        const td = sortedDiffs[i]
+        const timestamp = calculateMigrationTimestamp(baseTime, i)
+
+        const content = buildDiffMigrationContent([td])
+        const tableName = td.table
+        let changeType = td.changeType
+        const fileName = `${timestamp}_${changeType}_${tableName}.ts`
+        const filePath = resolve(migrationsFolder, fileName)
+
+        writeFileSync(filePath, content, 'utf-8')
+        console.log(`  ✔ Generated migration: ${fileName}`)
+
+        if (!firstFilePath) firstFilePath = filePath
+    }
 
     saveSnapshot(models.map(m => m.def), cwd)
 
-    return filePath
+    return firstFilePath || ''
+}
+
+function baseTimestamp(): string {
+    return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)
+}
+
+function calculateMigrationTimestamp(baseTimestamp: string, level: number): string {
+    const prefix = baseTimestamp.slice(0, 8)
+    const suffix = baseTimestamp.slice(8)
+    const suffixNum = parseInt(suffix, 10)
+    const newSuffix = String(suffixNum + level * 1000).padStart(6, '0')
+    return prefix + newSuffix
 }
 
 // ─── Build migration file content from diff ───────────────────────────────────
@@ -295,25 +406,4 @@ function baseColumnCall(col: string, meta: SnapshotFieldMeta): string {
         }
         default: return `specificType('${col}', '${meta.type}')`
     }
-}
-
-// ─── Write migration file ─────────────────────────────────────────────────────
-
-function migrationTimestamp(): string {
-    return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)
-}
-
-function writeMigrationFile(content: string, migrationsFolder: string, name: string): string {
-    if (!existsSync(migrationsFolder)) {
-        throw new Error(
-            `Migrations folder not found: ${migrationsFolder}\n` +
-            `Create the folder and set "migrationsFolder" in oerem.config.ts`
-        )
-    }
-
-    const fileName = `${migrationTimestamp()}_${name}.ts`
-    const filePath = resolve(migrationsFolder, fileName)
-    writeFileSync(filePath, content, 'utf-8')
-    console.log(`  ✔ Generated migration: ${fileName}`)
-    return filePath
 }

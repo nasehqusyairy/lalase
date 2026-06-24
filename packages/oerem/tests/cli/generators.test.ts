@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs'
+import { mkdirSync, rmSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { generateRegistry } from '../../src/cli/generators/registry.generator.js'
@@ -170,18 +170,21 @@ describe('generateMigration', () => {
         expect(content).toContain(".onUpdate('CASCADE')")
     })
 
-    it('migration drops tables in reverse order in down()', () => {
-        const filePath = generateMigration([userModel, postModel], migrationsDir)
-        const content = readFileSync(filePath, 'utf-8')
-        const downIdx = content.indexOf('async function down')
-        const dropUsers = content.indexOf("dropTableIfExists('users')", downIdx)
-        const dropPosts = content.indexOf("dropTableIfExists('posts')", downIdx)
-        expect(dropPosts).toBeLessThan(dropUsers)
+    it('migration files are sorted by dependency (users first, posts second)', () => {
+        // With one-file-per-table approach, files are sorted by dependency level
+        // users has no FK dependencies (level 0), posts depends on users (level 1)
+        generateMigration([userModel, postModel], migrationsDir)
+        const fileList = readdirSync(migrationsDir)
+        expect(fileList.length).toBe(2)
+        // Files are already sorted by sortModelsByDependency: users (level 0) first, posts (level 1) second
+        expect(fileList[0]).toContain('users')
+        expect(fileList[1]).toContain('posts')
     })
 
-    it('uses custom migration name', () => {
+    it('uses table name in filename', () => {
+        // New behavior: filename uses table name
         const filePath = generateMigration([userModel], migrationsDir, 'add_users_table')
-        expect(filePath).toContain('add_users_table')
+        expect(filePath).toContain('create_users')
     })
 
     it('uuid primary key uses uuid() not increments()', () => {

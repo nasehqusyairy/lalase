@@ -169,9 +169,87 @@ function generateMigrationContent(models: DiscoveredModel[]): string {
     ].join('\n')
 }
 
-// ─── Timestamp prefix ─────────────────────────────────────────────────────────
+// ─── Sort models by foreign key dependency ───────────────────────────────────
 
-function migrationTimestamp(): string {
+/**
+ * Sorts models by their foreign key dependency level.
+ * Models without FK dependencies come first (level 0),
+ * then models that depend on level 0, then level 1, etc.
+ */
+function sortModelsByDependency(models: DiscoveredModel[]): DiscoveredModel[] {
+    if (models.length <= 1) return models
+
+    // Build reference map: tableName -> table it references
+    const referencesMap = new Map<string, string>() // table -> table it references (if any)
+    const tableNames = new Set<string>()
+
+    for (const model of models) {
+        tableNames.add(model.def.table)
+    }
+
+    for (const model of models) {
+        for (const [, meta] of Object.entries(model.def.schema)) {
+            if (meta.foreign?.referencesTable) {
+                const refTable = meta.foreign.referencesTable
+                if (tableNames.has(refTable)) {
+                    // This table references another table
+                    referencesMap.set(model.def.table, refTable)
+                }
+            }
+        }
+    }
+
+    // Calculate level for each model: level = level of referenced table + 1
+    const levels = new Map<string, number>()
+
+    function calculateLevel(table: string, seen: Set<string>): number {
+        if (levels.has(table)) return levels.get(table)!
+        if (seen.has(table)) return 0 // Circular dependency fallback
+
+        const refTable = referencesMap.get(table)
+        if (!refTable) {
+            // No references - level 0
+            levels.set(table, 0)
+            return 0
+        }
+
+        seen.add(table)
+        const refLevel = calculateLevel(refTable, seen)
+        const level = refLevel + 1
+
+        levels.set(table, level)
+        return level
+    }
+
+    // Calculate levels for all tables
+    for (const model of models) {
+        calculateLevel(model.def.table, new Set())
+    }
+
+    // Sort by level, then by table name for stability
+    return [...models].sort((a, b) => {
+        const levelA = levels.get(a.def.table) ?? 0
+        const levelB = levels.get(b.def.table) ?? 0
+        if (levelA !== levelB) return levelA - levelB
+        return a.def.table.localeCompare(b.def.table)
+    })
+}
+
+// ─── Timestamp with dependency level ──────────────────────────────────────────
+
+function calculateMigrationTimestamp(baseTimestamp: string, level: number): string {
+    // Increment the last 6 digits (HHmmss) by level * 1000 to ensure proper ordering
+    // Base timestamp format: YYYYMMDDHHmmss (14 digits)
+    const prefix = baseTimestamp.slice(0, 8) // YYYYMMDD
+    const suffix = baseTimestamp.slice(8) // HHmmss
+
+    const suffixNum = parseInt(suffix, 10)
+    const newSuffix = String(suffixNum + level * 1000).padStart(6, '0')
+
+    return prefix + newSuffix
+}
+
+function baseTimestamp(): string {
     return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)
 }
 
@@ -189,14 +267,28 @@ export function generateMigration(
         )
     }
 
-    const fileName = `${migrationTimestamp()}_${name}.ts`
-    const filePath = resolve(migrationsFolder, fileName)
-    const content = generateMigrationContent(models)
+    // Sort models by dependency to ensure proper FK ordering
+    const sortedModels = sortModelsByDependency(models)
 
-    writeFileSync(filePath, content, 'utf-8')
-    console.log(`  ✔ Generated migration: ${fileName}`)
+    // Generate one migration file per model
+    const baseTime = baseTimestamp()
+    let firstFilePath: string | undefined
 
-    return filePath
+    for (let i = 0; i < sortedModels.length; i++) {
+        const model = sortedModels[i]
+        const level = i // Use index in sorted array as ordering (0 = no deps, etc.)
+        const timestamp = calculateMigrationTimestamp(baseTime, level)
+        const fileName = `${timestamp}_create_${model.def.table}.ts`
+        const filePath = resolve(migrationsFolder, fileName)
+        const content = generateMigrationContent([model])
+
+        writeFileSync(filePath, content, 'utf-8')
+        console.log(`  ✔ Generated migration: ${fileName}`)
+
+        if (!firstFilePath) firstFilePath = filePath
+    }
+
+    return firstFilePath || ''
 }
 
 // ─── Simulate: apply schema directly without migration file ──────────────────
@@ -233,7 +325,7 @@ export async function simulateSchema(
     }
 }
 
-// ─── Apply schema fields to knex TableBuilder ─────────────────────────────────
+// ─── Apply schema fields to knex TableBuilder ────────────��─��──────────────────
 
 function applySchemaToTable(
     table: import('knex').Knex.CreateTableBuilder,
